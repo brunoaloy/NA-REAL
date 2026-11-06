@@ -49,3 +49,11 @@ O binding de gestão está disponível nesta execução. GET do projeto reconhec
 Após validar 001–010 em Postgres/PostGIS descartável, a tentativa transacional de inicialização foi recusada: HTTP 400, SQLSTATE 25006, CREATE SCHEMA em transação somente leitura. Consultas com read_only=false e sem esse parâmetro continuaram indicando current_user=supabase_read_only_user, transaction_read_only=on. Nova consulta confirmou zero tabelas públicas. Nenhuma migration/política foi aplicada e nenhum papel foi alterado para contornar a restrição.
 
 Deploy via CLI parou antes da chamada de implantação por tentar criar .supabase na home somente leitura. Funções não foram implantadas nesta sessão. O relatório ENTREGA_SPRINT_01.md registra os testes que passaram e a integração que permanece pendente. Relatos anteriores de token ausente descrevem tentativas históricas.
+
+## Aplicação controlada — inventário atualizado
+
+Em 06/11/2026 20:57 UTC, pg_catalog confirmou ausência de tabelas/views em public e supabase_migrations; to_regclass do ledger retornou NULL. Existe a função padrão public.rls_auto_enable(), preservada. Auth/Storage retornaram zero usuários/objetos/buckets/policies próprias. A publication supabase_realtime existe. PostGIS/pg_trgm/unaccent ainda não instalados.
+
+CLI 3.0.0 vinculou o projeto e executou preflight read-only com sucesso após usar SUPABASE_HOME em pasta temporária permitida, sem mudar HOME. O problema anterior de diretório da CLI foi resolvido para esta preparação. Migration list e db push --dry-run --skip-vault falharam em DbConfigIpv6Error nesta rede; não houve dry-run concluído nem aplicação. CLI identifica alvo como production. A confirmação de ausência do ledger vem da consulta de catálogo, não de migration list.
+
+Plano Windows, impactos de metadados, backup e aplicação manual separada em APLICACAO_CONTROLADA_WINDOWS.md. Hashes dos dez SQLs preservados, nenhuma migration histórica reescrita. Testes remotos preparados em TESTES_REMOTOS_SPRINT_01.md, não executados. Nenhum reset/drop/repair foi executado no remoto.

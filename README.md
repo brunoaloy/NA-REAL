@@ -80,3 +80,7 @@ Busca nacional preservada; o botão de proximidade solicita autorização soment
 Nesta sessão, o projeto remoto foi identificado e a configuração pública foi recuperada em `.env.local` ignorado. O schema remoto está vazio e o SQL disponível opera em modo somente leitura: a tentativa de aplicação foi recusada, sem migrations aplicadas. Mapas ainda exigem estilo licenciado. Veja o relatório atual antes de interpretar resultados históricos.
 
 O teste de banco usa a imagem PostGIS Alpine para reduzir o disco necessário; `POSTGIS_TEST_IMAGE` permite selecionar outra imagem compatível. O teste de regressão `npm run test:reviews-ui` exige exportação web **com Supabase configurado**, servida em `SMOKE_URL` (padrão http://127.0.0.1:8765), e lê somente URL pública de `.env.local`. Intercepta todas as chamadas Supabase com fixtures de teste; não publica avaliações nem valida integração remota.
+
+## Aplicação controlada no Windows
+
+Use [APLICACAO_CONTROLADA_WINDOWS](docs/APLICACAO_CONTROLADA_WINDOWS.md) para inventário, hashes, backup, dry-run e aplicação manual via CLI 3.0.0, preservando o ledger. O script PowerShell de preparação não executa push real. [Testes remotos](docs/TESTES_REMOTOS_SPRINT_01.md) estão preparados, ainda não executados.

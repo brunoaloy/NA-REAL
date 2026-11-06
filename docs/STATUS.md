@@ -74,3 +74,7 @@ Relatório atual em [ENTREGA_SPRINT_01.md](ENTREGA_SPRINT_01.md). Base ea04fba r
 Passaram TypeScript, lint, 17 unitários, migrations 001–010 e suites SQL/RLS no Postgres/PostGIS descartável, regressão Chromium com fixtures, Deno das quatro funções, formatação, configuração mobile e bundles iOS/Android/web. Sem teste em aparelhos nem integração Auth/Storage remota.
 
 Supabase real agora identificado e saudável, com configuração pública recuperada em .env.local ignorado. Entretanto, SQL opera como supabase_read_only_user em transação somente leitura. Schema público/histórico vazios; inicialização recusada em CREATE SCHEMA, sem migrations remotas aplicadas. Estilo de mapa licenciado ausente. Sprint 01 não está concluído até resolver escrita, deploy e validar persistência com duas contas.
+
+## Aplicação controlada solicitada pelo proprietário
+
+Preparados [comandos Windows](APLICACAO_CONTROLADA_WINDOWS.md), manifest SHA-256, verificador, preflight/postflight read-only e script PowerShell que só prepara (sem push real). Novo inventário pg_catalog confirmou ausência do ledger/tabelas do app; preservada a função padrão rls_auto_enable. Link CLI e preflight passaram. Migration list/dry-run CLI ficaram bloqueados por IPv6 nesta nuvem, portanto aplicação continua pendente. Testes reais pós-aplicação preparados em TESTES_REMOTOS_SPRINT_01.md. Nenhum teste remoto de escrita foi executado; Sprint 01 permanece aberto.
