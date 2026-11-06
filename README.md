@@ -2,6 +2,8 @@
 
 Aplicativo React Native/Expo existente, ampliado na Fase 2. Continuidade atual: [Sprint 01](docs/ENTREGA_SPRINT_01.md). Não está liberado para produção. Consulte [status e evidências](docs/STATUS.md) e [auditoria de entrada](docs/AUDITORIA_FASE_2.md).
 
+**Estado atual do banco (06/11/2026):** migrations 001–010 confirmadas no Supabase remoto, postflight estrutural aprovado e consultas públicas respondendo HTTP 200. Catálogo público vazio. Testes reais com duas contas, moderação, fotos e aparelhos continuam pendentes; Sprint 01 permanece aberto. Relatos de schema ausente nas seções históricas descrevem tentativas anteriores.
+
 ## Desenvolvimento
 
 Node 24 e npm 11:

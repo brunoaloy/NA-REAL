@@ -90,3 +90,9 @@ A execução do proprietário retornou tabela Unicode onde o runner esperava JSO
 ## Correção complementar — JSON no terminal comum
 
 Reproduzido com a CLI real em `--agent=no`: `--output json` retorna uma lista direta de linhas, enquanto o modo agent retorna `{ rows: [...] }`. A primeira correção de JSON não contemplava a lista direta. O parser agora aceita ambos, valida que cada linha seja um objeto e rejeita erros/formatos inválidos sem revelar conteúdo. Passaram 25 testes, incluindo preparação completa com CLI simulada nos dois modos e garantia de dry-run. Saídas reais de probe e inventário nos dois formatos foram lidas com sucesso; nenhum SQL de escrita foi executado e os dez hashes permanecem intactos. Testes executados em Linux, sem alegação de execução no Windows do proprietário.
+
+## Banco remoto instalado e conferido — estado atual
+
+Em 06/11/2026 às 19:30 Brasília, após sucesso informado pelo proprietário no Windows, leitura independente do banco confirmou **001–010 aplicadas**, histórico completo, 24 tabelas com RLS e todos os checks estruturais do postflight aprovados. Função padrão rls_auto_enable preservada. Chamadas REST reais de visitante para places/reviews/médias e buscas nacional/proximidade retornaram HTTP 200 com listas vazias. Nenhuma escrita foi feita nesta validação.
+
+O bloqueio anterior de schema remoto vazio foi resolvido. Permanecem pendentes os fluxos reais A/B/moderador, SMTP/PKCE, cadastro/aprovação, avaliações/edição/média/persistência, fotos/Edge Functions, mapa licenciado e aparelhos. Não considerar o Sprint 01 concluído apenas pela estrutura. Evidência detalhada em AUDITORIA_SUPABASE_REMOTO.md e roteiro em TESTES_REMOTOS_SPRINT_01.md.
