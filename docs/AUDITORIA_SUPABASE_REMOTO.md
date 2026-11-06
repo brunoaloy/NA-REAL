@@ -33,3 +33,11 @@ Falta disponibilizar o binding seguro na instância desta conversa e informar UR
 Depois de autenticado: identificar projeto exato; conferir permissões e ambiente; listar histórico remoto; consultar estado do banco com operações de leitura; executar somente `db push --remote --dry-run --skip-vault` no alvo identificado. Nenhuma aprovação de aplicação real está presumida.
 
 O comando de listagem pode exigir projects_read; token estritamente limitado pode não permitir listar todos os projetos. Nesse caso usar o project-ref informado e testar acesso específico. Acesso a histórico/SQL pode exigir permissões adicionais; ainda não foram diagnosticadas. Senha de banco não foi solicitada: só será requisito se a operação efetiva exigir após testar autenticação disponível. Não ampliar para acesso de organização inteira por conveniência.
+
+## Identificador recebido
+
+Projeto-alvo informado pelo proprietário: `zcnfssihiqmbrlwvlsme`, URL pública `https://zcnfssihiqmbrlwvlsme.supabase.co`. Isso identifica o alvo autorizado; ainda não confirma existência/saúde pela API.
+
+Nova verificação: token continua ausente no processo e nos bindings ativos. O rascunho possui requisito SUPABASE_ACCESS_TOKEN com `has_saved_binding: false`, sem valor vinculado a esta configuração. URL pública sugerida e domínio exato do projeto foram salvos no rascunho, preservando api.supabase.com; a gravação não aplica nem publica automaticamente.
+
+Tentativa sem credenciais ao health de Auth: HTTP 000, curl exit 56; conectividade não confirmada. Não é evidência de banco fora do ar. Não houve consulta SQL, listagem de histórico ou dry-run remoto nesta etapa. Próximo requisito é salvar o valor pelo canal seguro desta configuração e aplicar/publicar o ambiente; depois testar novamente a autenticação, sem criar outro projeto ou aplicar SQL.
