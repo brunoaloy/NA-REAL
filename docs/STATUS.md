@@ -82,3 +82,7 @@ Preparados [comandos Windows](APLICACAO_CONTROLADA_WINDOWS.md), manifest SHA-256
 ## Continuidade sem Docker — estado atual
 
 Runner Node de preparação/verificação, inventário agregado, alternativas de backup nativo/provedor e comandos em SEM_DOCKER.md. Dez migrations intactas. Cadastro protegido abre detalhe; fotos têm prévia/confirmação; erros amigáveis e tratamento de teclado. TypeScript/lint, 20 unitários, bundles das três plataformas e smoke Chromium com fixtures passaram. Nenhuma alteração de schema remoto ou deploy de função ocorreu; inventário real passou e conexão CLI nesta nuvem continua bloqueada por IPv6. Ver ENTREGA_CONTINUIDADE_SEM_DOCKER.md. Sprint 01 continua aberto.
+
+## Correção da leitura da CLI no Windows
+
+A execução do proprietário retornou tabela Unicode onde o runner esperava JSON. As consultas capturadas agora exigem explicitamente `--output json`; o parser trata BOM/CRLF e interrompe com mensagem segura quando a resposta é inválida, sem imprimir linhas privadas. Três regressões adicionais cobrem o formato padrão em tabela, o JSON esperado e respostas inválidas. Passaram 23 unitários. A consulta real com JSON e a captura do inventário passaram nesta nuvem; o passo posterior de migration list continua bloqueado por IPv6. Nenhuma migration foi aplicada. Não foi executado Windows nesta máquina; a correção precisa ser repetida no terminal do proprietário após Fetch/Pull.

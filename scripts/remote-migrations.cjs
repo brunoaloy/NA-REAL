@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { randomUUID } = require("node:crypto");
+const { readOnlyArgs, parseQueryRows } = require("./lib/supabase-output.cjs");
 const root = path.resolve(__dirname, "..");
 const ref = "zcnfssihiqmbrlwvlsme";
 const cli = path.join(root, "node_modules/supabase/dist/supabase.js");
@@ -20,18 +21,7 @@ function run(args, visible = false) {
   return result.stdout;
 }
 function readOnly(file) {
-  const output = run([
-    "db",
-    "query",
-    "--remote=" + ref,
-    "--read-only",
-    "--file",
-    file,
-  ]);
-  const result = JSON.parse(output);
-  if (!Array.isArray(result.rows))
-    throw new Error("Unexpected CLI result; stop.");
-  return result.rows;
+  return parseQueryRows(run(readOnlyArgs(ref, file)));
 }
 function main() {
   const mode = process.argv[2] || "prepare";

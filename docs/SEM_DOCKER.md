@@ -16,7 +16,7 @@ npm.cmd ci
 npm.cmd run remote:prepare
 ```
 
-O comando Node usa a CLI 3.0.0 instalada pelo lockfile, sem chamar `.ps1` ou exigir mudanças na ExecutionPolicy. Usa explicitamente `zcnfssihiqmbrlwvlsme`. Executa verificação de hashes, inventário remoto read-only em **um único resultado**, registra metadados em `.local-services/remote-UUID/`, lista versões e executa:
+O comando Node usa a CLI 3.0.0 instalada pelo lockfile, sem chamar `.ps1` ou exigir mudanças na ExecutionPolicy. Usa explicitamente `zcnfssihiqmbrlwvlsme` e força `--output json` nas consultas capturadas, sem depender do formato padrão de tabela do terminal. Executa verificação de hashes, inventário remoto read-only em **um único resultado**, registra metadados em `.local-services/remote-UUID/`, lista versões e executa:
 
 ```powershell
 npx.cmd --no-install supabase db push --remote=zcnfssihiqmbrlwvlsme --dry-run --skip-vault
