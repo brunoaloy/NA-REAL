@@ -83,11 +83,20 @@ export async function saveReview(place_id: string, input: unknown) {
   if (result.error) throw result.error;
   return result.data.id as string;
 }
-export async function sendMessage(place_id: string, body: string) {
-  const author_id = await userId();
-  const r = await db()
-    .from("place_messages")
-    .insert({ place_id, author_id, body: messageInput.parse(body) });
+export async function sendMessage(
+  place_id: string,
+  body: string,
+  request: string,
+  reply: string | null = null,
+) {
+  await userId();
+  const r = await db().rpc("submit_message", {
+    place: place_id,
+    body: messageInput.parse(body),
+    request,
+    reply,
+  });
   if (r.error) throw r.error;
+  return r.data as string;
 }
 export { featureCollection } from "../validation/geo";

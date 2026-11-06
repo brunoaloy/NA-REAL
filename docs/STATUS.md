@@ -48,3 +48,7 @@ Verificações desta continuação: TypeScript, lint, 11 testes unitários, form
 ## Fase 3 — módulo de correções
 
 Implementados compartilhamento e sugestões privadas de correção com RLS, validação por campo, revisão humana, auditoria e versão esperada do lugar. Migração nova 008; aplicar após 007. TypeScript, lint e 11 testes unitários passaram. As oito migrações e asserts locais de correção/RLS/auditoria passaram em PostgreSQL/PostGIS descartável; Supabase real continua sem configuração e não foi testado.
+
+## Fase 3 — respostas da sala
+
+Migração 009 adiciona vínculo de resposta com integridade de sala, validação da disponibilidade da mensagem original e RPC de envio idempotente. UI identifica autores por perfil aprovado (fallback por identificador), mostra contexto sem copiar texto ocultado e preserva rascunho em falhas. Testes locais confirmaram replay sem duplicação, conflito de conteúdo e recusa de resposta em outra sala. Entrega Realtime entre dispositivos segue não validada sem Supabase real.

@@ -5,9 +5,9 @@ Branch de entrada `codex/na-real-dev`, HEAD cbc8393, código anterior commitado 
 ## Checklist incremental
 
 - [x] Auditar Git, módulos e configuração disponível.
-- [ ] Sugestões de correções privadas, validação, revisão humana, aplicação auditada e controle de versão.
-- [ ] Compartilhar link de um estabelecimento sem inventar domínio.
-- [ ] Respostas vinculadas a mensagens da mesma sala e identificação pública moderada de autores.
+- [x] Sugestões de correções privadas, validação, revisão humana, aplicação auditada e controle de versão.
+- [x] Compartilhar link de um estabelecimento sem inventar domínio.
+- [x] Respostas vinculadas a mensagens da mesma sala e identificação pública moderada de autores.
 - [ ] Testes de RLS e regressões; commits e push por módulo.
 - [ ] Testar autenticação, Storage, IA e dois usuários no Supabase real (depende de configuração).
 

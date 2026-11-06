@@ -85,16 +85,14 @@ export function PlaceSuggestions({
           setBusy(true);
           try {
             const author_id = await userId();
-            const r = await db()
-              .from("place_change_suggestions")
-              .insert({
-                place_id: id,
-                author_id,
-                expected_revision: revision,
-                field,
-                proposed_value: value.trim(),
-                reason: reason.trim(),
-              });
+            const r = await db().from("place_change_suggestions").insert({
+              place_id: id,
+              author_id,
+              expected_revision: revision,
+              field,
+              proposed_value: value.trim(),
+              reason: reason.trim(),
+            });
             if (r.error) throw r.error;
             setNotice(
               "Sugestão recebida. O cadastro público permanece igual até revisão.",

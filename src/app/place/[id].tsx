@@ -1,6 +1,8 @@
+import { randomUUID } from "expo-crypto";
+import { AuthorLabel, ReplyContext } from "../../components/message-context";
 import { createURL } from "expo-linking";
 import { PlaceSuggestions } from "../../components/place-suggestions";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { View, Pressable, Text, Share } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import {
@@ -30,6 +32,10 @@ export default function Detail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const qc = useQueryClient();
   const session = useSession();
+  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const draftRequest = useRef<{ fingerprint: string; key: string } | null>(
+    null,
+  );
   const [tab, setTab] = useState("Geral");
   const [text, setText] = useState("");
   const [rating, setRating] = useState(5);
@@ -69,7 +75,7 @@ export default function Detail() {
     queryFn: async ({ pageParam }) => {
       let query = db()
         .from("place_messages")
-        .select("id,author_id,body,created_at,moderation_state")
+        .select("id,author_id,body,created_at,moderation_state,reply_to")
         .eq("place_id", id)
         .order("created_at", { ascending: false })
         .order("id", { ascending: false })
@@ -145,8 +151,14 @@ export default function Detail() {
     setError(undefined);
     setNotice("");
     try {
-      if (tab === "Sala") await sendMessage(id, text);
-      else setReviewId(await saveReview(id, { rating, body: text }));
+      if (tab === "Sala") {
+        const fingerprint = JSON.stringify([id, text.trim(), replyTo]);
+        if (draftRequest.current?.fingerprint !== fingerprint)
+          draftRequest.current = { fingerprint, key: randomUUID() };
+        await sendMessage(id, text, draftRequest.current.key, replyTo);
+        draftRequest.current = null;
+        setReplyTo(null);
+      } else setReviewId(await saveReview(id, { rating, body: text }));
       setText("");
       setNotice(
         "Contribuição recebida para análise. Só será pública após aprovação.",
@@ -273,7 +285,18 @@ export default function Detail() {
           {messages.data?.pages.flat().map((m) => (
             <Card key={m.id}>
               <StatusChip state={m.moderation_state} />
+              <AuthorLabel id={m.author_id} />
+              {m.reply_to && <ReplyContext id={m.reply_to} placeId={id} />}
               <Copy>{m.body}</Copy>
+              {m.moderation_state === "approved" && (
+                <PrimaryButton
+                  title="Responder mensagem"
+                  onPress={() => {
+                    setReplyTo(m.id);
+                    setError(undefined);
+                  }}
+                />
+              )}
               <Copy>{new Date(m.created_at).toLocaleString("pt-BR")}</Copy>
               <ContentActions
                 type="place_messages"
@@ -373,6 +396,15 @@ export default function Detail() {
           {reviewId && <PhotoPicker reviewId={reviewId} />}
         </>
       )}
+      {tab === "Sala" && replyTo && (
+        <Card>
+          <ReplyContext id={replyTo} placeId={id} />
+          <PrimaryButton
+            title="Cancelar resposta"
+            onPress={() => setReplyTo(null)}
+          />
+        </Card>
+      )}
       {["Sala", "Avaliações"].includes(tab) && (
         <>
           <Field
@@ -386,9 +418,11 @@ export default function Detail() {
           />
           <PrimaryButton
             title={
-              tab === "Sala"
-                ? "Enviar mensagem para análise"
-                : "Enviar avaliação para revisão"
+              error
+                ? "Tentar enviar novamente"
+                : tab === "Sala"
+                  ? "Enviar mensagem para análise"
+                  : "Enviar avaliação para revisão"
             }
             disabled={busy || !text.trim()}
             onPress={() => void submit()}
