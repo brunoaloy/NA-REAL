@@ -58,3 +58,11 @@ Migração 009 adiciona vínculo de resposta com integridade de sala, validaçã
 Pergunta livre validada e histórico paginado de encerradas, com autores e data/hora. A tela atualiza por eventos e não permite responder a perguntas expiradas; servidor já rejeitava esses envios. Passaram TypeScript, lint e 13 testes unitários (incluindo duas novas validações de pergunta). A validação remota com duas contas ainda depende de Supabase/SMTP/redirects e não foi executada. Código mantém estados pendentes, sem simular análise ou publicação.
 
 Validação final desta execução: nove migrações e testes SQL de correção obsoleta, permissões, replies e retry passaram; 13 unitários, TypeScript, lint, formatação e bundles iOS/Android/web passaram. Smoke Chromium passou em servidor temporário (visitante, filtros, cadastro sem backend, perfil, privacidade e offline). Não foram instalados novos binários em aparelhos nem aplicadas migrações remotas.
+
+## Fase 4 — infraestrutura e validação
+
+Proprietário confirmou ausência de projeto remoto; preparado alvo local com CLI Supabase 3.0.0, confirmação SMTP local, Auth/API/Storage/Realtime e suíte HTTP de duas contas que recusa host remoto. A stack real não iniciou: Docker vfs consumiu o disco (97%) durante inicialização de schema. Imagens novas foram limpas, preservando volumes/código e recuperando espaço. A suíte test:services registrou BLOCKED/código 2 antes dos cenários, não aprovação.
+
+Adicionados checkers sem exposição de valores, proteção de chaves públicas em build/runtime, auditoria 001–009, procedimento de backup/dry-run/recuperação e perfis EAS de desenvolvimento/simulador. Passaram TypeScript/lint, 17 unitários, SQL/RLS local, carregamento Expo, rejeição de chave administrativa/produção sem bindings, mobile:check, prebuild e bundles das três plataformas. Supabase remoto, IA, mapas, e-mails externos, APK/IPA e aparelhos continuam não validados. Veja RELATORIO_FASE_4.md para tabela e ações necessárias.
+
+Smoke final em Chromium também passou sem erros JavaScript, usando servidor temporário isolado. A suíte de serviços completos permaneceu bloqueada antes de criar contas; não substitui os resultados de SQL e interface por resultados de integração.

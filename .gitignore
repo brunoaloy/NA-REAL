@@ -55,3 +55,8 @@ service-account*.json
 *.pfx
 id_rsa
 id_ed25519
+
+# Estado da CLI e relatórios locais (podem conter credenciais de desenvolvimento)
+supabase/.temp/
+supabase/.branches/
+.local-services/

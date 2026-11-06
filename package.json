@@ -48,6 +48,7 @@
     "eslint": "^9.39.5",
     "eslint-config-expo": "^58.0.4",
     "prettier": "^3.9.10",
+    "supabase": "^3.0.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -62,7 +63,12 @@
     "test:db": "bash scripts/test-db.sh",
     "test:smoke": "node tests/smoke.cjs",
     "format:check": "prettier --check src tests docs package.json",
-    "test:functions": "npx deno check supabase/functions/moderate-pending/index.ts supabase/functions/prepare-photo/index.ts supabase/functions/delete-account/index.ts supabase/functions/delete-photo/index.ts"
+    "test:functions": "npx deno check supabase/functions/moderate-pending/index.ts supabase/functions/prepare-photo/index.ts supabase/functions/delete-account/index.ts supabase/functions/delete-photo/index.ts",
+    "services:check": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/check-services.cjs",
+    "services:start": "supabase start --exclude studio,logflare,vector,imgproxy,supavisor,postgres-meta",
+    "services:stop": "supabase stop",
+    "test:services": "node scripts/test-services.cjs",
+    "mobile:check": "node scripts/check-mobile-config.cjs"
   },
   "private": true
 }

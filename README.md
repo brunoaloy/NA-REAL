@@ -66,3 +66,9 @@ Detalhes do lugar oferecem compartilhamento via link do app e sugestões privada
 Salas aceitam respostas a mensagens aprovadas da mesma comunidade. Envios repetidos com o mesmo identificador e conteúdo retornam a mesma mensagem; erros preservam o rascunho para nova tentativa. A identificação pública usa apenas perfil aprovado, sem expor e-mail.
 
 Perguntas agora têm campo livre validado, histórico paginado de encerradas e atualização por eventos. Perguntas antigas não aceitam novos envios nem são exibidas como informação atual. São nove migrações; se já aplicou 001–007, aplique somente 008 e 009. As variáveis públicas seguem as mesmas do `.env.example`.
+
+## Infraestrutura e validação — Fase 4
+
+Leia [SETUP_SERVICOS](docs/SETUP_SERVICOS.md) antes de conectar banco. `npm run services:check` relata presença/formato sem imprimir valores; `npm run services:start` prepara Supabase local e `npm run test:services` exercita APIs reais com fixtures isoladas (recusa projetos remotos). A stack completa não iniciou nesta máquina por falta de disco Docker; a suíte de duas contas ficou bloqueada, não aprovada. O proprietário ainda não criou projeto remoto.
+
+`npm run mobile:check` valida configuração Expo/EAS; confira [validação mobile](docs/VALIDACAO_MOBILE.md) e [auditoria de migrações](docs/AUDITORIA_MIGRACOES.md). Novas proteções recusam chaves administrativas no cliente. Para HTTP de desenvolvimento local, defina `NA_REAL_ALLOW_LOCAL_HTTP=1`; não use essa opção em produção.

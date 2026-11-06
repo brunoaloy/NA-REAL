@@ -32,3 +32,9 @@ Supabase: dois usuários reais, confirmação/recuperação de e-mail, RLS via H
 ## Incrementos da Fase 3
 
 `tests/sql/phase3.sql` exercita sugestões privadas, recusa de não admin, aplicação auditada, revisão obsoleta, respostas na mesma sala e retry idempotente. A suíte agora aplica nove migrações e possui 13 testes unitários; dois novos cobrem perguntas livres. Claims continuam emulados; não são sessões de Auth/Realtime reais.
+
+## Infraestrutura da Fase 4
+
+`npm run services:check` verifica apenas presença/formato, sem conexão ou valores. `npm run test:services` exige stack real LOCAL, cria A/B/operador efêmeros, usa SMTP capturado, API/Realtime/Storage/Edge e gera relatório privado ignorado. Recusa host remoto. Nesta execução foi bloqueada antes dos cenários por falta da stack (Docker sem disco), com código 2; sintaxe verificada, sem alegar resultados HTTP.
+
+`npm run mobile:check` valida configuração Expo real e perfis, sem assinatura ou aparelho. Quatro novos testes validam formatos públicos, rejeição de service_role, URL segura e erro sem vazamento. Total: 17 casos unitários. Prebuild e export não equivalem a instalação. Relatório em RELATORIO_FASE_4.md.
