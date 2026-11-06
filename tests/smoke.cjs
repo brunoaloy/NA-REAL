@@ -14,7 +14,7 @@ const assert = require("node:assert/strict");
     const page = await context.newPage();
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    await page.goto("http://127.0.0.1:8765");
+    await page.goto(process.env.SMOKE_URL || "http://127.0.0.1:8765");
     await page.getByRole("button", { name: "Começar como visitante" }).click();
     await page
       .getByText("Supabase não configurado.", { exact: false })

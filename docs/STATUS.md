@@ -52,3 +52,9 @@ Implementados compartilhamento e sugestões privadas de correção com RLS, vali
 ## Fase 3 — respostas da sala
 
 Migração 009 adiciona vínculo de resposta com integridade de sala, validação da disponibilidade da mensagem original e RPC de envio idempotente. UI identifica autores por perfil aprovado (fallback por identificador), mostra contexto sem copiar texto ocultado e preserva rascunho em falhas. Testes locais confirmaram replay sem duplicação, conflito de conteúdo e recusa de resposta em outra sala. Entrega Realtime entre dispositivos segue não validada sem Supabase real.
+
+## Fase 3 — perguntas e histórico
+
+Pergunta livre validada e histórico paginado de encerradas, com autores e data/hora. A tela atualiza por eventos e não permite responder a perguntas expiradas; servidor já rejeitava esses envios. Passaram TypeScript, lint e 13 testes unitários (incluindo duas novas validações de pergunta). A validação remota com duas contas ainda depende de Supabase/SMTP/redirects e não foi executada. Código mantém estados pendentes, sem simular análise ou publicação.
+
+Validação final desta execução: nove migrações e testes SQL de correção obsoleta, permissões, replies e retry passaram; 13 unitários, TypeScript, lint, formatação e bundles iOS/Android/web passaram. Smoke Chromium passou em servidor temporário (visitante, filtros, cadastro sem backend, perfil, privacidade e offline). Não foram instalados novos binários em aparelhos nem aplicadas migrações remotas.

@@ -64,3 +64,5 @@ Supabase remoto, envio de e-mail, IA, Storage, mapa licenciado e dois dispositiv
 Detalhes do lugar oferecem compartilhamento via link do app e sugestões privadas de correção. No painel admin, as propostas podem ser revisadas e aplicadas com auditoria; propostas de versões antigas são recusadas. O link compartilhado usa o esquema/host do runtime atual, sem presumir um domínio público publicado. Consulte docs/FASE_3.md.
 
 Salas aceitam respostas a mensagens aprovadas da mesma comunidade. Envios repetidos com o mesmo identificador e conteúdo retornam a mesma mensagem; erros preservam o rascunho para nova tentativa. A identificação pública usa apenas perfil aprovado, sem expor e-mail.
+
+Perguntas agora têm campo livre validado, histórico paginado de encerradas e atualização por eventos. Perguntas antigas não aceitam novos envios nem são exibidas como informação atual. São nove migrações; se já aplicou 001–007, aplique somente 008 e 009. As variáveis públicas seguem as mesmas do `.env.example`.

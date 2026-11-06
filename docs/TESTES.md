@@ -28,3 +28,7 @@ Capturas em `docs/screenshots/fase2-*`. São estados reais sem backend; não dem
 ## Verificações que ainda exigem configuração/dispositivos
 
 Supabase: dois usuários reais, confirmação/recuperação de e-mail, RLS via HTTP, aprovação e eventos Realtime, upload de JPEG real, MIME/quotas, IA real e falhas do provedor, URLs assinadas, exclusão completa e retry após falha parcial. Mapas: chave licenciada, tiles, clusters/gestos e localização negada em aparelhos. iOS/Android: build assinado, instalação, câmera, leitor de tela, texto grande, desempenho, reconexão/background e fluxo completo de conta. Nenhum resultado desses testes é presumido por um build JS verde.
+
+## Incrementos da Fase 3
+
+`tests/sql/phase3.sql` exercita sugestões privadas, recusa de não admin, aplicação auditada, revisão obsoleta, respostas na mesma sala e retry idempotente. A suíte agora aplica nove migrações e possui 13 testes unitários; dois novos cobrem perguntas livres. Claims continuam emulados; não são sessões de Auth/Realtime reais.

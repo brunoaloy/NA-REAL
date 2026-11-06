@@ -37,3 +37,18 @@ do $$begin
 end$$;
 reset role;
 select 'Phase 3 reply and retry assertions passed' as result;
+-- A concurrently reviewed correction must not overwrite a newer place revision.
+set role authenticated;
+set request.jwt.claim.sub='00000000-0000-0000-0000-000000000002';
+insert into public.place_change_suggestions(place_id,author_id,expected_revision,field,proposed_value,reason) select id,auth.uid(),content_revision,'address','Rua obsoleta 40','Sugestão anterior à revisão' from public.places where name='Local aprovado';
+reset role;
+update public.places set description='Revisão mais recente' where name='Local aprovado';
+update public.places set moderation_state='approved' where name='Local aprovado';
+set role authenticated;
+set request.jwt.claim.sub='00000000-0000-0000-0000-000000000003';
+do $$begin
+ begin perform public.review_place_suggestion((select id from public.place_change_suggestions where proposed_value='Rua obsoleta 40'),true,'Revisão desatualizada');raise exception 'Stale correction accepted';exception when raise_exception then if sqlerrm='Stale correction accepted' then raise;end if;end;
+ if exists(select 1 from public.places where address='Rua obsoleta 40') then raise exception 'Stale correction changed data';end if;
+end$$;
+reset role;
+select 'Stale correction assertions passed' as result;

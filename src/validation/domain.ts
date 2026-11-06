@@ -28,3 +28,8 @@ export const messageInput = z.string().trim().min(1).max(1000);
 export function isRecent(expiresAt: string, now = Date.now()) {
   return Date.parse(expiresAt) > now;
 }
+
+export const questionInput = z.object({
+  kind: z.enum(["movement", "queue", "open", "parking", "other"]),
+  body: z.string().trim().min(3).max(500),
+});
