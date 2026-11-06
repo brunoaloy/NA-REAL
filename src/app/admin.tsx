@@ -1,3 +1,4 @@
+import { View, Pressable, Text } from "react-native";
 import { ModerationPhoto } from "../components/moderation-photo";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,23 +15,33 @@ import { AppHeader, StatusChip } from "../components/design";
 import { db } from "../services/supabase";
 export default function Admin() {
   const qc = useQueryClient();
+  const [page, setPage] = useState(0);
+  const [state, setState] = useState("pending");
+  const pageSize = 25;
   const [reason, setReason] = useState("");
   const [target, setTarget] = useState("");
   const [error, setError] = useState<unknown>();
   const [busy, setBusy] = useState(false);
   const q = useQuery({
-    queryKey: ["admin-queue"],
+    queryKey: ["admin-queue", state, page],
     queryFn: async () => {
       const a = await db().rpc("safe_is_admin");
       if (a.error) throw a.error;
       if (a.data !== true)
         throw new Error("Acesso restrito a moderadores autorizados.");
-      const queue = await db()
+      let queueQuery = db()
         .from("moderation_items")
-        .select("id,target_type,target_id,state,payload,analysis,created_at")
+        .select("id,target_type,target_id,state,payload,analysis,created_at", {
+          count: "exact",
+        })
         .neq("state", "superseded")
         .order("created_at", { ascending: false })
-        .limit(100);
+        .order("id", { ascending: false });
+      if (state !== "all") queueQuery = queueQuery.eq("state", state);
+      const queue = await queueQuery.range(
+        page * pageSize,
+        page * pageSize + pageSize - 1,
+      );
       const reports = await db()
         .from("ugc_reports")
         .select("id,target_type,target_id,reason")
@@ -55,6 +66,7 @@ export default function Admin() {
         throw queue.error ?? reports.error ?? appeals.error;
       return {
         queue: queue.data,
+        queueCount: queue.count ?? 0,
         reports: [
           ...reports.data,
           ...legacy.data.map((r) => ({
@@ -125,6 +137,38 @@ export default function Admin() {
               }
             }}
           />
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {[
+              ["pending", "Pendentes"],
+              ["approved", "Aprovados"],
+              ["rejected", "Rejeitados"],
+              ["removed", "Removidos"],
+              ["all", "Todos"],
+            ].map(([value, label]) => (
+              <Pressable
+                key={value}
+                accessibilityRole="button"
+                accessibilityState={{ selected: state === value }}
+                onPress={() => {
+                  setState(value);
+                  setPage(0);
+                }}
+                style={{
+                  padding: 12,
+                  borderRadius: 18,
+                  backgroundColor: state === value ? "#D1FAE5" : "#F1F5F9",
+                }}
+              >
+                <Text>{label}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <Copy>
+            {q.data.queueCount} itens neste filtro • página {page + 1}
+          </Copy>
+          {q.data.queue.length === 0 && (
+            <Copy>Nenhum conteúdo nesta página.</Copy>
+          )}
           {q.data.queue.map((i) => (
             <Card key={i.id}>
               <Title>{i.target_type}</Title>
@@ -182,6 +226,16 @@ export default function Admin() {
               ))}
             </Card>
           ))}
+          <PrimaryButton
+            title="Página anterior da fila"
+            disabled={busy || page === 0}
+            onPress={() => setPage((p) => p - 1)}
+          />
+          <PrimaryButton
+            title="Próxima página da fila"
+            disabled={busy || (page + 1) * pageSize >= q.data.queueCount}
+            onPress={() => setPage((p) => p + 1)}
+          />
           <Title>Denúncias</Title>
           {q.data.reports.map((r) => (
             <Card key={r.id}>

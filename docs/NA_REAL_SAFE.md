@@ -20,6 +20,6 @@ Denúncias por tipo de UGC são privadas ao denunciante e moderadores. Bloqueios
 
 ## Abuso e operação pendente
 
-Limites por usuário, ação e janela são aplicados em transações com advisory locks; ledger independente impede reiniciar o orçamento apagando conteúdo. Ainda é necessário gateway/rate limit por IP, monitoramento operacional, paginação completa da ferramenta administrativa e política de retenção/expurgo de versões e uploads órfãos. A fila atual mostra até 100 itens recentes, 50 denúncias/recursos e não substitui equipe de moderação.
+Limites por usuário, ação e janela são aplicados em transações com advisory locks; ledger independente impede reiniciar o orçamento apagando conteúdo. Ainda é necessário gateway/rate limit por IP, monitoramento operacional, paginação completa da ferramenta administrativa e política de retenção/expurgo de versões e uploads órfãos. A fila tem filtros por estado e páginas de 25 itens; denúncias/recursos continuam limitados a 50 resultados e não substitui equipe de moderação.
 
 Cobertura automatizada é proporcional, sujeita a falsos negativos/positivos e revisão humana. Não publicar para público externo antes de configurar equipe e verificar o pipeline completo com arquivos e usuários reais.

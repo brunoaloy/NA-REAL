@@ -38,3 +38,9 @@ Aplicar migrações novas 003–007 no Supabase autorizado e implantar quatro fu
 ## Próximos passos
 
 Executar roteiro de dois usuários em Supabase de desenvolvimento; revisar legado, pipeline de mídia e exclusão. Validar mapas e câmera em development builds. Depois completar lacunas operacionais/visuais e revisão legal antes das lojas. Não é uma entrega pronta para produção ou para publicação.
+
+## Continuidade com GitHub
+
+Código anterior preservado em commit na branch `codex/na-real-dev`. Novo módulo: fila administrativa com filtros por estado, contagem real, ordenação estável por data/UUID e páginas de 25 itens. Denúncias e recursos mantêm seus limites próprios. Guia de sincronização no `GIT_GITHUB_DESKTOP.md`.
+
+Verificações desta continuação: TypeScript, lint, 11 testes unitários, formatação, exportação web e smoke Chromium passaram. O primeiro smoke encontrou o servidor estático desligado; após iniciá-lo, o teste passou. A paginação administrativa ainda precisa de validação com dados no Supabase real; testes locais não comprovam essa integração remota.
