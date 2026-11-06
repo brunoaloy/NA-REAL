@@ -68,7 +68,8 @@
     "services:start": "supabase start --exclude studio,logflare,vector,imgproxy,supavisor,postgres-meta",
     "services:stop": "supabase stop",
     "test:services": "node scripts/test-services.cjs",
-    "mobile:check": "node scripts/check-mobile-config.cjs"
+    "mobile:check": "node scripts/check-mobile-config.cjs",
+    "test:reviews-ui": "node tests/reviews-smoke.cjs"
   },
   "private": true
 }

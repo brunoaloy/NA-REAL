@@ -96,15 +96,43 @@ export default function Detail() {
           }
         : undefined,
   });
-  const reviews = useQuery({
-    queryKey: ["reviews", id],
+  const reviews = useInfiniteQuery({
+    queryKey: ["reviews", id, session?.user.id ?? "guest"],
+    initialPageParam: null as { time: string; id: string } | null,
+    queryFn: async ({ pageParam }) => {
+      let query = db()
+        .from("reviews")
+        .select("id,rating,body,author_id,moderation_state,created_at")
+        .eq("place_id", id)
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .limit(30);
+      if (pageParam)
+        query = query.or(
+          `created_at.lt.${pageParam.time},and(created_at.eq.${pageParam.time},id.lt.${pageParam.id})`,
+        );
+      const r = await query;
+      if (r.error) throw r.error;
+      return r.data;
+    },
+    getNextPageParam: (last) =>
+      last.length === 30
+        ? {
+            time: last[last.length - 1].created_at as string,
+            id: last[last.length - 1].id as string,
+          }
+        : undefined,
+  });
+  const mine = useQuery({
+    queryKey: ["reviews", id, session?.user.id, "mine"],
+    enabled: !!session,
     queryFn: async () => {
       const r = await db()
         .from("reviews")
-        .select("id,rating,body,author_id,moderation_state")
+        .select("id,rating,body")
         .eq("place_id", id)
-        .order("created_at", { ascending: false })
-        .limit(50);
+        .eq("author_id", session!.user.id)
+        .maybeSingle();
       if (r.error) throw r.error;
       return r.data;
     },
@@ -172,7 +200,7 @@ export default function Detail() {
       setBusy(false);
     }
   }
-  const ownReview = reviews.data?.find((r) => r.author_id === session?.user.id);
+  const ownReview = mine.data;
   return (
     <Screen>
       <AppHeader title={place.data?.name ?? "Lugar"} back />
@@ -334,10 +362,10 @@ export default function Detail() {
         <>
           {reviews.isPending && <Copy>Carregando avaliações…</Copy>}
           {reviews.isError && <ErrorState error={reviews.error} />}
-          {reviews.data?.length === 0 && (
+          {reviews.data?.pages.flat().length === 0 && (
             <EmptyState text="Sem avaliações aprovadas." />
           )}
-          {reviews.data?.map((r) => (
+          {reviews.data?.pages.flat().map((r) => (
             <Card key={r.id}>
               <StatusChip state={r.moderation_state} />
               <Copy>
@@ -360,6 +388,14 @@ export default function Detail() {
               )}
             </Card>
           ))}
+          {reviews.hasNextPage && (
+            <PrimaryButton
+              title="Avaliações anteriores"
+              disabled={reviews.isFetchingNextPage}
+              onPress={() => void reviews.fetchNextPage()}
+            />
+          )}
+          {mine.isError && <ErrorState error={mine.error} />}
           {ownReview && (
             <PrimaryButton
               title="Editar minha avaliação"
