@@ -1,5 +1,7 @@
 # Aplicação controlada — Windows / PowerShell
 
+**Atualização:** se Docker ou a política de scripts PowerShell bloquear o fluxo, seguir [SEM_DOCKER.md](SEM_DOCKER.md). O runner `npm run remote:prepare` prepara sem containers, sem `.ps1` e sem aplicação automática. O registro de metadados não substitui backup completo.
+
 Projeto autorizado: **NA REAL**, `zcnfssihiqmbrlwvlsme`. CLI fixada no lockfile: **3.0.0**. Os flags abaixo foram conferidos no `--help` dessa versão; na CLI 3, o alvo padrão é local e `--remote` seleciona o remoto. Não substituir por comandos de outros tutoriais sem conferir a versão.
 
 **Este documento prepara a aplicação; nenhuma migration foi aplicada remotamente nesta etapa. O Sprint 01 permanece aberto.** O plano não recria projeto, não faz reset, não apaga tabelas/dados e não altera configurações Auth, SMTP, domínio ou chaves. Vault é explicitamente excluído do push. As substituições de metadados já presentes nos SQLs estão descritas abaixo e precisam ser revisadas.
@@ -99,7 +101,7 @@ No estado auditado, esperar dez versões locais sem correspondência remota e as
 
 ## 5. Backup e revisão antes de aplicar
 
-Confirmar backup/snapshot/PITR do provedor e plano de recuperação em cópia, sem presumir disponibilidade no plano. Guardar horário, HEAD Git, inventário e histórico em armazenamento privado. Os dumps abaixo são complementares: não substituem Auth, configurações, segredos ou bytes de Storage. Não remover nenhum dado para fazer backup funcionar.
+Confirmar backup/snapshot/PITR do provedor e plano de recuperação em cópia, sem presumir disponibilidade no plano. Guardar horário, HEAD Git, inventário e histórico em armazenamento privado. Os dumps abaixo usam o caminho com Docker; para backup nativo ou do provedor, seguir SEM_DOCKER.md. São complementares: não substituem Auth, configurações, segredos ou bytes de Storage. Não remover nenhum dado para fazer backup funcionar.
 
 ```powershell
 $projectRef = 'zcnfssihiqmbrlwvlsme'

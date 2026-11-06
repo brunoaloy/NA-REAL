@@ -84,3 +84,7 @@ O teste de banco usa a imagem PostGIS Alpine para reduzir o disco necessário; `
 ## Aplicação controlada no Windows
 
 Use [APLICACAO_CONTROLADA_WINDOWS](docs/APLICACAO_CONTROLADA_WINDOWS.md) para inventário, hashes, backup, dry-run e aplicação manual via CLI 3.0.0, preservando o ledger. O script PowerShell de preparação não executa push real. [Testes remotos](docs/TESTES_REMOTOS_SPRINT_01.md) estão preparados, ainda não executados.
+
+## Continuidade sem Docker
+
+`npm run remote:prepare` prepara inventário/histórico/dry-run remoto com a CLI instalada, sem PowerShell scripts ou containers. Não executa aplicação. Após aplicar manualmente, `npm run remote:verify` verifica a estrutura. Veja [SEM_DOCKER](docs/SEM_DOCKER.md) para alternativas de backup e [entrega atual](docs/ENTREGA_CONTINUIDADE_SEM_DOCKER.md) para melhorias e limitações.

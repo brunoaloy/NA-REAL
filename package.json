@@ -69,7 +69,9 @@
     "services:stop": "supabase stop",
     "test:services": "node scripts/test-services.cjs",
     "mobile:check": "node scripts/check-mobile-config.cjs",
-    "test:reviews-ui": "node tests/reviews-smoke.cjs"
+    "test:reviews-ui": "node tests/reviews-smoke.cjs",
+    "remote:prepare": "node scripts/remote-migrations.cjs prepare",
+    "remote:verify": "node scripts/remote-migrations.cjs verify"
   },
   "private": true
 }
