@@ -78,3 +78,7 @@ Supabase real agora identificado e saudável, com configuração pública recupe
 ## Aplicação controlada solicitada pelo proprietário
 
 Preparados [comandos Windows](APLICACAO_CONTROLADA_WINDOWS.md), manifest SHA-256, verificador, preflight/postflight read-only e script PowerShell que só prepara (sem push real). Novo inventário pg_catalog confirmou ausência do ledger/tabelas do app; preservada a função padrão rls_auto_enable. Link CLI e preflight passaram. Migration list/dry-run CLI ficaram bloqueados por IPv6 nesta nuvem, portanto aplicação continua pendente. Testes reais pós-aplicação preparados em TESTES_REMOTOS_SPRINT_01.md. Nenhum teste remoto de escrita foi executado; Sprint 01 permanece aberto.
+
+## Continuidade sem Docker — estado atual
+
+Runner Node de preparação/verificação, inventário agregado, alternativas de backup nativo/provedor e comandos em SEM_DOCKER.md. Dez migrations intactas. Cadastro protegido abre detalhe; fotos têm prévia/confirmação; erros amigáveis e tratamento de teclado. TypeScript/lint, 20 unitários, bundles das três plataformas e smoke Chromium com fixtures passaram. Nenhuma alteração de schema remoto ou deploy de função ocorreu; inventário real passou e conexão CLI nesta nuvem continua bloqueada por IPv6. Ver ENTREGA_CONTINUIDADE_SEM_DOCKER.md. Sprint 01 continua aberto.
