@@ -86,3 +86,7 @@ Runner Node de preparação/verificação, inventário agregado, alternativas de
 ## Correção da leitura da CLI no Windows
 
 A execução do proprietário retornou tabela Unicode onde o runner esperava JSON. As consultas capturadas agora exigem explicitamente `--output json`; o parser trata BOM/CRLF e interrompe com mensagem segura quando a resposta é inválida, sem imprimir linhas privadas. Três regressões adicionais cobrem o formato padrão em tabela, o JSON esperado e respostas inválidas. Passaram 23 unitários. A consulta real com JSON e a captura do inventário passaram nesta nuvem; o passo posterior de migration list continua bloqueado por IPv6. Nenhuma migration foi aplicada. Não foi executado Windows nesta máquina; a correção precisa ser repetida no terminal do proprietário após Fetch/Pull.
+
+## Correção complementar — JSON no terminal comum
+
+Reproduzido com a CLI real em `--agent=no`: `--output json` retorna uma lista direta de linhas, enquanto o modo agent retorna `{ rows: [...] }`. A primeira correção de JSON não contemplava a lista direta. O parser agora aceita ambos, valida que cada linha seja um objeto e rejeita erros/formatos inválidos sem revelar conteúdo. Passaram 25 testes, incluindo preparação completa com CLI simulada nos dois modos e garantia de dry-run. Saídas reais de probe e inventário nos dois formatos foram lidas com sucesso; nenhum SQL de escrita foi executado e os dez hashes permanecem intactos. Testes executados em Linux, sem alegação de execução no Windows do proprietário.

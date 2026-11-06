@@ -42,7 +42,10 @@ test("rejects tables, malformed JSON and error envelopes without leaking output"
     '{"rows":',
     '{"error":"private@example.test"}',
     "null",
-    "[]",
+    "{}",
+    "[null]",
+    "[1]",
+    '{"rows":[],"error":"private@example.test"}',
   ]) {
     assert.throws(
       () => parseQueryRows(value),
@@ -50,5 +53,98 @@ test("rejects tables, malformed JSON and error envelopes without leaking output"
         !error.message.includes("private@example.test") &&
         /interrompida/.test(error.message),
     );
+  }
+});
+
+test("parses real terminal-mode row array and empty result", () => {
+  const rows = [
+    {
+      inventory: {
+        relations: [],
+        buckets: [],
+        auth_users: 0,
+        storage_objects: 0,
+      },
+    },
+  ];
+  assert.deepEqual(parseQueryRows(JSON.stringify(rows)), rows);
+  assert.deepEqual(parseQueryRows("[]"), []);
+});
+
+test("preparation completes with terminal and agent CLI formats and never applies", async () => {
+  const fs = await import("node:fs");
+  const os = await import("node:os");
+  const path = await import("node:path");
+  const root = path.resolve(".");
+  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "nareal-cli-format-"));
+  try {
+    for (const name of [
+      "scripts/remote-migrations.cjs",
+      "scripts/check-migration-manifest.cjs",
+      "scripts/lib/supabase-output.cjs",
+      "scripts/migrations/manifest.json",
+    ]) {
+      fs.mkdirSync(path.dirname(path.join(fixture, name)), { recursive: true });
+      fs.copyFileSync(path.join(root, name), path.join(fixture, name));
+    }
+    fs.cpSync(
+      path.join(root, "supabase/migrations"),
+      path.join(fixture, "supabase/migrations"),
+      { recursive: true },
+    );
+    const binary = path.join(fixture, "node_modules/supabase/dist/supabase.js");
+    fs.mkdirSync(path.dirname(binary), { recursive: true });
+    fs.writeFileSync(
+      binary,
+      `
+      const fs=require('node:fs');const a=process.argv.slice(2);
+      fs.appendFileSync(process.env.NAREAL_TEST_CALLS,JSON.stringify(a)+'\\n');
+      if(a.includes('--version')) process.stdout.write('3.0.0');
+      else if(a[0]==='db'&&a[1]==='query') {
+        if(!a.includes('--read-only')||a[a.indexOf('--output')+1]!=='json') process.exit(2);
+        const rows=[{inventory:{relations:[],buckets:[],auth_users:0,storage_objects:0}}];
+        process.stdout.write(JSON.stringify(process.env.NAREAL_TEST_FORMAT==='terminal'?rows:{rows}));
+      } else if(a[0]==='migration'&&a[1]==='list') process.stdout.write('fixture history');
+      else if(a[0]==='db'&&a[1]==='push'&&a.includes('--dry-run')&&a.includes('--skip-vault')) process.stdout.write('fixture dry-run');
+      else process.exit(3);
+    `,
+    );
+    for (const format of ["terminal", "agent"]) {
+      const calls = path.join(fixture, "calls-" + format + ".jsonl");
+      const result = spawnSync(
+        process.execPath,
+        [path.join(fixture, "scripts/remote-migrations.cjs"), "prepare"],
+        {
+          cwd: fixture,
+          encoding: "utf8",
+          env: {
+            ...process.env,
+            NAREAL_TEST_FORMAT: format,
+            NAREAL_TEST_CALLS: calls,
+          },
+        },
+      );
+      assert.equal(result.status, 0, result.stderr);
+      assert.match(result.stdout, /Preparation finished/);
+      const actions = fs
+        .readFileSync(calls, "utf8")
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line) as string[]);
+      assert(actions.some((a) => a[0] === "db" && a[1] === "query"));
+      assert(actions.some((a) => a[0] === "migration" && a[1] === "list"));
+      assert(
+        actions.some(
+          (a) => a[0] === "db" && a[1] === "push" && a.includes("--dry-run"),
+        ),
+      );
+      assert(
+        actions.every(
+          (a) => a[0] !== "db" || a[1] !== "push" || a.includes("--dry-run"),
+        ),
+      );
+    }
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
   }
 });

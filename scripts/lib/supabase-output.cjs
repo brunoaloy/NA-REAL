@@ -25,10 +25,18 @@ function parseQueryRows(output) {
       "A CLI não retornou JSON válido. Preparação interrompida; nenhuma migration foi aplicada.",
     );
   }
-  if (!result || typeof result !== "object" || !Array.isArray(result.rows))
+  // CLI 3 returns a row array in a regular terminal and an envelope in agent mode.
+  const rows = Array.isArray(result) ? result : result?.rows;
+  if (
+    result?.error ||
+    !Array.isArray(rows) ||
+    !rows.every(
+      (row) => row !== null && typeof row === "object" && !Array.isArray(row),
+    )
+  )
     throw new Error(
       "Resposta JSON inesperada da CLI. Preparação interrompida; nenhuma migration foi aplicada.",
     );
-  return result.rows;
+  return rows;
 }
 module.exports = { readOnlyArgs, parseQueryRows };
