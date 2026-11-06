@@ -1,0 +1,207 @@
+
+PROJETO: NA REAL
+FASE 2 — CONTINUIDADE DO DESENVOLVIMENTO
+
+Você já implementou a estrutura inicial do aplicativo NA REAL com Expo, React Native, TypeScript e Supabase.
+
+Agora quero que continue o desenvolvimento a partir do código existente, SEM recriar o projeto do zero e SEM remover funcionalidades já implementadas.
+
+REFERÊNCIAS OBRIGATÓRIAS:
+- Especificação original do NA REAL.
+- Mockup aprovado contendo as 12 telas.
+- README atual.
+- Plano técnico existente.
+- Arquivos de status e migrações.
+- Diretrizes de segurança do NA REAL Safe, quando disponíveis.
+
+Antes de implementar, faça uma auditoria do repositório e identifique exatamente quais funcionalidades estão completas, parciais, simuladas ou ausentes.
+
+OBJETIVO DESTA FASE:
+Transformar a estrutura inicial em um MVP mobile funcional, seguro e visualmente fiel ao mockup aprovado.
+
+1. MODERAÇÃO — NA REAL SAFE
+
+Implementar um sistema de moderação para todas as áreas com conteúdo criado por usuários:
+
+- Mensagens das salas.
+- Perguntas e respostas.
+- Avaliações.
+- Comentários.
+- Fotografias.
+- Informações de estabelecimentos.
+- Perfis e nomes de usuários.
+
+Criar uma camada de análise automática capaz de detectar ou sinalizar:
+- Ameaças e incitação à violência.
+- Assédio e discriminação.
+- Golpes e tentativas de fraude.
+- Divulgação de dados pessoais de terceiros.
+- Conteúdo sexual ilegal ou abusivo.
+- Spam e manipulação de avaliações.
+- Outros conteúdos que violem as regras da comunidade.
+
+Implementar:
+- Verificação de conteúdo no backend antes da publicação.
+- Integração configurável com um provedor de moderação por IA.
+- Estados: aprovado, pendente, rejeitado e removido.
+- Fila para revisão humana.
+- Denúncia de mensagens, avaliações, fotos e perfis.
+- Bloqueio de usuários.
+- Registro auditável de decisões de moderação.
+- Contestação de decisões.
+- Limites contra spam e abuso.
+- Mecanismos para suspender contas abusivas.
+- Políticas RLS para proteger operações administrativas.
+
+Se o serviço de moderação não estiver configurado ou estiver indisponível, conteúdos ainda não verificados devem permanecer pendentes.
+
+Não invente respostas de IA nem marque conteúdo como seguro sem análise real.
+
+Não tente desenvolver um detector infalível de crimes. Use análise proporcional ao risco, revisão humana e tratamento apropriado de casos graves.
+
+2. MAPA NACIONAL
+
+Implementar o mapa interativo do Brasil conforme o mockup.
+
+Requisitos:
+- Navegação e zoom.
+- Marcadores de estabelecimentos.
+- Filtros por categoria.
+- Busca por cidade, nome e localização.
+- Integração com PostGIS.
+- Consulta geográfica por região visível.
+- Carregamento incremental e agrupamento de marcadores.
+- Localização opcional do usuário.
+- Alternância entre lista e mapa.
+- Abertura da página do lugar ao tocar no marcador.
+
+Escolha um provedor de mapas compatível com Expo e com condições de uso adequadas para produção.
+
+Não dependa de serviços públicos gratuitos sem considerar suas restrições de utilização.
+
+3. CADASTRO COLABORATIVO DE LUGARES
+
+Concluir o fluxo de cadastro de locais.
+
+O usuário deve conseguir:
+- Pesquisar se o lugar já existe.
+- Inserir nome e categoria.
+- Selecionar endereço ou posição no mapa.
+- Adicionar descrição.
+- Enviar fotografias.
+- Publicar o cadastro após as validações necessárias.
+
+Implementar prevenção de duplicatas e mecanismos de revisão de cadastros suspeitos.
+
+Proteger a plataforma contra a publicação indevida de endereços residenciais privados e informações pessoais.
+
+4. FOTOGRAFIAS E ARMAZENAMENTO
+
+Integrar armazenamento real ao Supabase Storage.
+
+Implementar:
+- Seleção de imagens.
+- Captura pela câmera, mediante permissão.
+- Compressão e redimensionamento.
+- Limites de tamanho e formatos.
+- Upload seguro.
+- Moderação das imagens.
+- Remoção autorizada de arquivos.
+- Fotografias em avaliações e locais.
+
+5. AVALIAÇÕES E COMUNIDADES
+
+Concluir os recursos já iniciados:
+
+- Avaliações de 1 a 5 estrelas.
+- Comentários e fotos.
+- Média de notas calculada a partir de avaliações válidas.
+- Edição da própria avaliação.
+- Salas de conversa em tempo real.
+- Perguntas e respostas por estabelecimento.
+- Relatos de movimento.
+- Indicadores de validade temporal.
+- Confirmação ou contestação de relatos.
+- Notificações quando perguntas receberem respostas.
+- Favoritos e acompanhamento de lugares.
+
+Todas as ações devem persistir no banco de dados e respeitar as permissões de acesso.
+
+Não permitir que usuários alterem informações pertencentes a outros usuários.
+
+6. PERFIL, PRIVACIDADE E CONTA
+
+Concluir:
+- Visualização e edição do perfil.
+- Histórico de avaliações e contribuições.
+- Favoritos.
+- Preferências de notificações.
+- Bloqueio de outros usuários.
+- Exclusão de conta dentro do aplicativo.
+- Tratamento dos dados relacionados à exclusão.
+- Política de privacidade e termos de uso acessíveis.
+
+7. FIDELIDADE VISUAL
+
+Utilizar a imagem de referência aprovada para reproduzir as 12 telas.
+
+Preservar:
+- Marca "na real."
+- Fundo predominantemente branco.
+- Verde-escuro como cor principal.
+- Verde-claro para estados positivos.
+- Tipografia Inter.
+- Cartões arredondados.
+- Ícones minimalistas.
+- Espaçamento amplo.
+- Navegação inferior simples.
+- Botões e componentes consistentes.
+
+Criar componentes reutilizáveis.
+
+Implementar estados vazios, carregamento, erro, ausência de internet e falta de dados.
+
+Usar dados reais do backend quando disponível.
+
+Não apresentar estatísticas fictícias como dados reais.
+
+8. QUALIDADE E TESTES
+
+Executar:
+- TypeScript.
+- Lint.
+- Testes unitários.
+- Testes de integração.
+- Testes de políticas RLS.
+- Testes de autorização e moderação.
+- Verificação dos fluxos críticos.
+
+Preparar builds de desenvolvimento para iOS e Android e documentar quais verificações dependem de dispositivos reais.
+
+Não declarar uma funcionalidade concluída apenas porque sua interface foi criada.
+
+9. ENTREGA
+
+Ao finalizar esta fase, apresentar:
+
+- Funcionalidades implementadas.
+- Funcionalidades ainda pendentes.
+- Arquivos criados e modificados.
+- Migrações de banco necessárias.
+- Variáveis de ambiente a configurar.
+- Instruções para executar localmente.
+- Resultado dos testes.
+- Problemas conhecidos.
+- Próximas etapas recomendadas.
+
+IMPORTANTE:
+
+Não reinicie o projeto.
+Não substitua o código funcional por mocks.
+Não exponha chaves secretas no aplicativo.
+Não publique conteúdos não moderados.
+Não declare o aplicativo pronto para as lojas sem validação real.
+
+Implemente por módulos, testando e registrando o progresso.
+
+Comece pela auditoria do estado atual e avance para a implementação.

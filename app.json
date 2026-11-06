@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "NA REAL",
+    "slug": "na-real",
+    "scheme": "nareal",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.example.nareal"
+    },
+    "android": {
+      "package": "com.example.nareal"
+    },
+    "plugins": [
+      "expo-router",
+      "@maplibre/maplibre-react-native",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Use sua localiza\u00e7\u00e3o somente ao tocar em Perto de mim para encontrar lugares."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Escolha uma foto para sua contribui\u00e7\u00e3o.",
+          "cameraPermission": "Tire uma foto para sua contribui\u00e7\u00e3o.",
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

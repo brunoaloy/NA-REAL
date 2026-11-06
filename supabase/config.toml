@@ -1,0 +1,10 @@
+project_id = "na-real"
+[functions.moderate-pending]
+verify_jwt = false
+[functions.delete-account]
+verify_jwt = false
+[functions.delete-photo]
+verify_jwt = false
+
+[functions.prepare-photo]
+verify_jwt = false

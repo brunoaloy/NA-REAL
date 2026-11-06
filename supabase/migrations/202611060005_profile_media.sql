@@ -1,0 +1,10 @@
+alter table public.photos add column profile_id uuid references public.profiles on delete cascade;
+alter table public.photos drop constraint photos_check;
+alter table public.photos add constraint photos_target check(num_nonnulls(place_id,review_id,profile_id)=1);
+grant insert(profile_id) on public.photos to authenticated;
+drop policy photos_insert on public.photos;
+create policy photos_insert on public.photos for insert to authenticated with check(owner_id=auth.uid() and public.safe_active() and ((place_id is not null and exists(select 1 from public.places where id=place_id)) or (review_id is not null and exists(select 1 from public.reviews where id=review_id and author_id=auth.uid())) or(profile_id=auth.uid() and exists(select 1 from public.profiles where id=profile_id))));
+drop policy photo_parent_read on public.photos;
+create policy photo_parent_read on public.photos as restrictive for select using(owner_id=auth.uid() or public.safe_is_admin() or ((place_id is not null and exists(select 1 from public.places p where p.id=place_id and p.moderation_state='approved' and p.verification_status='approved')) or(review_id is not null and exists(select 1 from public.reviews r where r.id=review_id and r.moderation_state='approved' and r.status='approved')) or(profile_id is not null and exists(select 1 from public.profiles p where p.id=profile_id and p.moderation_state='approved'))));
+create policy legacy_reports_admin on public.content_reports for select to authenticated using(public.safe_is_admin());
+alter publication supabase_realtime add table public.live_reports,public.report_confirmations,public.photos;
