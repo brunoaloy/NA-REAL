@@ -41,3 +41,11 @@ Projeto-alvo informado pelo proprietário: `zcnfssihiqmbrlwvlsme`, URL pública 
 Nova verificação: token continua ausente no processo e nos bindings ativos. O rascunho possui requisito SUPABASE_ACCESS_TOKEN com `has_saved_binding: false`, sem valor vinculado a esta configuração. URL pública sugerida e domínio exato do projeto foram salvos no rascunho, preservando api.supabase.com; a gravação não aplica nem publica automaticamente.
 
 Tentativa sem credenciais ao health de Auth: HTTP 000, curl exit 56; conectividade não confirmada. Não é evidência de banco fora do ar. Não houve consulta SQL, listagem de histórico ou dry-run remoto nesta etapa. Próximo requisito é salvar o valor pelo canal seguro desta configuração e aplicar/publicar o ambiente; depois testar novamente a autenticação, sem criar outro projeto ou aplicar SQL.
+
+## Atualização — continuidade Sprint 01
+
+O binding de gestão está disponível nesta execução. GET do projeto reconheceu NA REAL, ref zcnfssihiqmbrlwvlsme, ACTIVE_HEALTHY. Consulta read-only de information_schema retornou zero tabelas em public e supabase_migrations. A configuração pública foi recuperada em .env.local ignorado; nenhum token administrativo gravado no app.
+
+Após validar 001–010 em Postgres/PostGIS descartável, a tentativa transacional de inicialização foi recusada: HTTP 400, SQLSTATE 25006, CREATE SCHEMA em transação somente leitura. Consultas com read_only=false e sem esse parâmetro continuaram indicando current_user=supabase_read_only_user, transaction_read_only=on. Nova consulta confirmou zero tabelas públicas. Nenhuma migration/política foi aplicada e nenhum papel foi alterado para contornar a restrição.
+
+Deploy via CLI parou antes da chamada de implantação por tentar criar .supabase na home somente leitura. Funções não foram implantadas nesta sessão. O relatório ENTREGA_SPRINT_01.md registra os testes que passaram e a integração que permanece pendente. Relatos anteriores de token ausente descrevem tentativas históricas.

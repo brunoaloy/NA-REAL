@@ -1,6 +1,6 @@
 # NA REAL
 
-Aplicativo React Native/Expo existente, ampliado na Fase 2. Não está liberado para produção. Consulte [status e evidências](docs/STATUS.md) e [auditoria de entrada](docs/AUDITORIA_FASE_2.md).
+Aplicativo React Native/Expo existente, ampliado na Fase 2. Continuidade atual: [Sprint 01](docs/ENTREGA_SPRINT_01.md). Não está liberado para produção. Consulte [status e evidências](docs/STATUS.md) e [auditoria de entrada](docs/AUDITORIA_FASE_2.md).
 
 ## Desenvolvimento
 
@@ -27,7 +27,7 @@ Os projetos gerados `ios/` e `android/` são ignorados; configuração reproduz�
 
 ## Supabase e moderação
 
-1. Crie um projeto de desenvolvimento e aplique as **nove** migrações em `supabase/migrations` em ordem. Se as duas primeiras já foram aplicadas, execute somente 003–009. Faça backup antes de atualizar qualquer ambiente com dados reais.
+1. Crie um projeto de desenvolvimento e aplique as **dez** migrações em `supabase/migrations` em ordem. Se as duas primeiras já foram aplicadas, execute somente 003–010. Faça backup antes de atualizar qualquer ambiente com dados reais.
 2. Configure URL/chave **publicável** em `.env.local`. Nunca use service_role no app. Configure SMTP, confirmação de e-mail e redirects `nareal://auth-callback` e URL web de `/auth-callback`. O fluxo usa PKCE; links devem abrir no dispositivo com o verificador da solicitação.
 3. Publique as funções `moderate-pending`, `prepare-photo`, `delete-photo` e `delete-account` com Supabase CLI/dashboard. Todas validam identidade explicitamente no handler. Veja [configuração externa](docs/CONFIGURACAO_EXTERNA.md).
 4. Designe um moderador por SQL privilegiado: `insert into public.safe_admins(user_id) values ('UUID_DO_USUARIO_AUTH');`. Nunca permita que clientes gravem essa tabela. O painel protegido fica na rota `/admin`, inclusive na interface web.
@@ -65,10 +65,18 @@ Detalhes do lugar oferecem compartilhamento via link do app e sugestões privada
 
 Salas aceitam respostas a mensagens aprovadas da mesma comunidade. Envios repetidos com o mesmo identificador e conteúdo retornam a mesma mensagem; erros preservam o rascunho para nova tentativa. A identificação pública usa apenas perfil aprovado, sem expor e-mail.
 
-Perguntas agora têm campo livre validado, histórico paginado de encerradas e atualização por eventos. Perguntas antigas não aceitam novos envios nem são exibidas como informação atual. São nove migrações; se já aplicou 001–007, aplique somente 008 e 009. As variáveis públicas seguem as mesmas do `.env.example`.
+Perguntas agora têm campo livre validado, histórico paginado de encerradas e atualização por eventos. Perguntas antigas não aceitam novos envios nem são exibidas como informação atual. São dez migrações; se já aplicou 001–007, aplique somente 008 e 009. As variáveis públicas seguem as mesmas do `.env.example`.
 
 ## Infraestrutura e validação — Fase 4
 
 Leia [SETUP_SERVICOS](docs/SETUP_SERVICOS.md) antes de conectar banco. `npm run services:check` relata presença/formato sem imprimir valores; `npm run services:start` prepara Supabase local e `npm run test:services` exercita APIs reais com fixtures isoladas (recusa projetos remotos). A stack completa não iniciou nesta máquina por falta de disco Docker; a suíte de duas contas ficou bloqueada, não aprovada. O proprietário ainda não criou projeto remoto.
 
 `npm run mobile:check` valida configuração Expo/EAS; confira [validação mobile](docs/VALIDACAO_MOBILE.md) e [auditoria de migrações](docs/AUDITORIA_MIGRACOES.md). Novas proteções recusam chaves administrativas no cliente. Para HTTP de desenvolvimento local, defina `NA_REAL_ALLOW_LOCAL_HTTP=1`; não use essa opção em produção.
+
+## Sprint 01 — continuidade
+
+Busca nacional preservada; o botão de proximidade solicita autorização somente quando acionado e ordena lugares com coordenadas no servidor. Avaliações têm cursor estável e edição própria independente da página carregada. Aplicar a migration 010 após 009 em ambientes existentes; ela é aditiva.
+
+Nesta sessão, o projeto remoto foi identificado e a configuração pública foi recuperada em `.env.local` ignorado. O schema remoto está vazio e o SQL disponível opera em modo somente leitura: a tentativa de aplicação foi recusada, sem migrations aplicadas. Mapas ainda exigem estilo licenciado. Veja o relatório atual antes de interpretar resultados históricos.
+
+O teste de banco usa a imagem PostGIS Alpine para reduzir o disco necessário; `POSTGIS_TEST_IMAGE` permite selecionar outra imagem compatível. O teste de regressão `npm run test:reviews-ui` exige exportação web **com Supabase configurado**, servida em `SMOKE_URL` (padrão http://127.0.0.1:8765), e lê somente URL pública de `.env.local`. Intercepta todas as chamadas Supabase com fixtures de teste; não publica avaliações nem valida integração remota.
