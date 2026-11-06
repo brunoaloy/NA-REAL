@@ -1,7 +1,10 @@
+import { errorMessage } from "../validation/errors";
 import { OfflineBanner } from "./connectivity";
 import { PropsWithChildren } from "react";
 import {
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
   Text,
   TextInput,
   Pressable,
@@ -21,12 +24,17 @@ export function Screen({ children }: PropsWithChildren) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <OfflineBanner />
-      <ScrollView
-        contentContainerStyle={s.screen}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        {children}
-      </ScrollView>
+        <ScrollView
+          contentContainerStyle={s.screen}
+          keyboardShouldPersistTaps="handled"
+        >
+          {children}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -91,7 +99,7 @@ export function EmptyState({
 export function ErrorState({ error }: { error: unknown }) {
   return (
     <Text accessibilityRole="alert" style={{ color: "#B91C1C" }}>
-      {error instanceof Error ? error.message : String(error)}
+      {errorMessage(error)}
     </Text>
   );
 }

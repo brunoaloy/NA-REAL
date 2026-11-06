@@ -5,11 +5,11 @@ import { File } from "expo-file-system";
 import { Platform } from "react-native";
 import { db } from "./supabase";
 import { userId } from "./catalog";
-export async function uploadPhoto(
-  target: { placeId?: string; reviewId?: string; profileId?: string },
+export type PreparedPhoto = { uri: string; bytes: ArrayBuffer };
+export async function preparePhoto(
   camera = false,
-) {
-  const uid = await userId();
+): Promise<PreparedPhoto | null> {
+  await userId();
   const permission = camera
     ? await ImagePicker.requestCameraPermissionsAsync()
     : await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -26,7 +26,7 @@ export async function uploadPhoto(
         quality: 1,
         exif: false,
       });
-  if (selected.canceled) return false;
+  if (selected.canceled) return null;
   const source = selected.assets[0];
   const context = ImageManipulator.manipulate(source.uri);
   context.resize(
@@ -46,6 +46,21 @@ export async function uploadPhoto(
       : await new File(saved.uri).arrayBuffer();
   if (bytes.byteLength > 5242880)
     throw new Error("A foto excede 5 MB após compressão.");
+  return { uri: saved.uri, bytes };
+}
+export async function uploadPreparedPhoto(
+  target: { placeId?: string; reviewId?: string; profileId?: string },
+  prepared: PreparedPhoto,
+) {
+  if (
+    [target.placeId, target.reviewId, target.profileId].filter(Boolean)
+      .length !== 1
+  )
+    throw new Error("Selecione um destino para a foto.");
+  const bytes = prepared.bytes;
+  if (!bytes.byteLength || bytes.byteLength > 5242880)
+    throw new Error("A foto deve ter até 5 MB.");
+  const uid = await userId();
   const path = uid + "/" + randomUUID() + ".jpg";
   const row = await db()
     .from("photos")

@@ -36,27 +36,13 @@ const assert = require("node:assert/strict");
     });
     await page.getByRole("button", { name: "Voltar à lista" }).click();
     await page.getByRole("tab", { name: "Adicionar" }).click();
-    await page.getByLabel("Nome do lugar").fill("Mercado de teste");
     await page
-      .getByRole("textbox", { name: "Cidade", exact: true })
-      .fill("Recife");
-    await page.getByRole("textbox", { name: "UF", exact: true }).fill("PE");
-    await page
-      .getByLabel("Endereço público", { exact: true })
-      .fill("Rua Pública 10");
-    const submit = page.getByRole("button", {
-      name: "Enviar para revisão",
-      exact: true,
-    });
-    assert.equal(await submit.getAttribute("aria-disabled"), "true");
-    await page
-      .getByRole("button", { name: "Pesquisar possíveis duplicatas" })
-      .click();
-    await page
-      .getByRole("alert")
-      .filter({ hasText: "Supabase não configurado." })
+      .getByRole("button", { name: "Entrar para adicionar lugar" })
       .waitFor();
-    assert.equal(await submit.getAttribute("aria-disabled"), "true");
+    assert.equal(
+      await page.getByRole("textbox", { name: "Nome do lugar" }).count(),
+      0,
+    );
     await page.screenshot({
       path: "docs/screenshots/fase2-adicionar.png",
       fullPage: true,

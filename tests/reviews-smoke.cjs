@@ -34,7 +34,10 @@ const assert = require("node:assert/strict");
       ".fixture";
     let cursorSeen = false,
       ownSeen = false,
-      nearSeen = false;
+      nearSeen = false,
+      photoWrites = 0,
+      uploaded = 0,
+      placeCreated = false;
     // Use the configured public project's host solely to match the bundled SDK URL.
     const { readFileSync } = require("node:fs");
     const env = readFileSync(".env.local", "utf8");
@@ -62,12 +65,13 @@ const assert = require("node:assert/strict");
     await context.routeWebSocket("wss://" + host + "/**", (socket) =>
       socket.close(),
     );
-    await context.route("https://" + host + "/**", async (route) => {
+    const interceptApi = async (route) => {
       const u = new URL(route.request().url());
       let data = [];
       if (u.pathname === "/auth/v1/user")
         data = { id: uid, aud: "authenticated", role: "authenticated" };
-      else if (u.pathname === "/rest/v1/places")
+      else if (u.pathname === "/rest/v1/places") {
+        if (route.request().method() === "POST") placeCreated = true;
         data = {
           id: place,
           name: "UI fixture place",
@@ -80,7 +84,7 @@ const assert = require("node:assert/strict");
           verification_status: "approved",
           content_revision: "fixture",
         };
-      else if (u.pathname === "/rest/v1/place_ratings")
+      } else if (u.pathname === "/rest/v1/place_ratings")
         data = { rating: 4, review_count: 35 };
       else if (u.pathname === "/rest/v1/reviews") {
         if (route.request().method() !== "GET")
@@ -107,7 +111,23 @@ const assert = require("node:assert/strict");
         assert(Math.abs(args.origin_longitude + 34.88) < 0.001);
         nearSeen = true;
         data = [];
-      } else if (u.pathname === "/rest/v1/rpc/search_places") data = [];
+      } else if (
+        u.pathname === "/rest/v1/photos" &&
+        route.request().method() === "POST"
+      ) {
+        photoWrites++;
+        data = { id: "70000000-0000-0000-0000-000000000001" };
+      } else if (
+        u.pathname.startsWith("/storage/v1/object/community-photos/") &&
+        route.request().method() === "POST"
+      ) {
+        uploaded++;
+        data = { Key: "fixture", Id: "70000000-0000-0000-0000-000000000001" };
+      } else if (
+        u.pathname === "/rest/v1/rpc/search_places" ||
+        u.pathname === "/rest/v1/rpc/duplicate_candidates"
+      )
+        data = [];
       else if (u.pathname.includes("/rpc/")) data = false;
       await route.fulfill({
         status: 200,
@@ -115,7 +135,9 @@ const assert = require("node:assert/strict");
         body: JSON.stringify(data),
         headers: { "access-control-allow-origin": "*" },
       });
-    });
+    };
+    await context.route("https://" + host + "/**", interceptApi);
+
     const base = process.env.SMOKE_URL || "http://127.0.0.1:8765";
     // The documented Python static server lacks SPA history fallback.
     await context.route(base + "/place/**", (route) =>
@@ -174,9 +196,100 @@ const assert = require("node:assert/strict");
     await page
       .getByRole("button", { name: "Ordenar por proximidade", exact: true })
       .waitFor();
+    await page.getByRole("tab", { name: /Adicionar/ }).click();
+    await page
+      .getByRole("textbox", { name: "Nome do lugar", exact: true })
+      .fill("Lugar de fixture");
+    await page
+      .getByRole("textbox", { name: "Cidade", exact: true })
+      .fill("Recife");
+    await page.getByRole("textbox", { name: "UF", exact: true }).fill("PE");
+    await page
+      .getByRole("textbox", { name: "Endereço público", exact: true })
+      .fill("Endereço público de fixture 10");
+    await page
+      .getByRole("button", {
+        name: "Pesquisar possíveis duplicatas",
+        exact: true,
+      })
+      .click();
+    await page
+      .getByText("Nenhum candidato público encontrado.", { exact: false })
+      .waitFor();
+    await page
+      .getByRole("switch", { name: "Confirmo que é estabelecimento público" })
+      .check();
+    await page
+      .getByRole("button", { name: "Enviar para revisão", exact: true })
+      .click();
+    await page.getByRole("tab", { name: "Geral", exact: true }).waitFor();
+    assert(placeCreated);
+    const fixtureImage = await browser.newPage({
+      viewport: { width: 32, height: 32 },
+    });
+    await fixtureImage.setContent(
+      '<body style="margin:0;background:#0F766E"><div style="width:16px;height:16px;background:#10B981"></div></body>',
+    );
+    const jpeg = await fixtureImage.screenshot({ type: "jpeg" });
+    await fixtureImage.close();
+    const choosing = page.waitForEvent("filechooser");
+    await page
+      .getByRole("button", { name: "Escolher foto", exact: true })
+      .click();
+    const chooser = await choosing;
+    await chooser.setFiles({
+      name: "fixture.jpg",
+      mimeType: "image/jpeg",
+      buffer: jpeg,
+    });
+    await page
+      .getByRole("img", { name: "Prévia da foto selecionada" })
+      .waitFor();
+    await page
+      .getByRole("img", { name: "Prévia da foto selecionada" })
+      .scrollIntoViewIfNeeded();
+    if (process.env.UI_SCREENSHOT_PATH)
+      await page.screenshot({
+        path: process.env.UI_SCREENSHOT_PATH,
+        fullPage: true,
+      });
+    assert.equal(photoWrites, 0);
+    assert.equal(uploaded, 0);
+    await page
+      .getByRole("button", { name: "Enviar foto para revisão", exact: true })
+      .click();
+    await page
+      .getByText(
+        "Foto enviada. Aguardando moderação; ainda não está pública.",
+        { exact: true },
+      )
+      .waitFor();
+    assert.equal(photoWrites, 1);
+    assert.equal(uploaded, 1);
+    const guest = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+    });
+    await guest.route("https://" + host + "/**", interceptApi);
+    await guest.routeWebSocket("wss://" + host + "/**", (socket) =>
+      socket.close(),
+    );
+    const visitor = await guest.newPage();
+    visitor.on("pageerror", (e) => errors.push(e.message));
+    await visitor.goto(base);
+    await visitor
+      .getByRole("button", { name: "Começar como visitante" })
+      .click();
+    await visitor.getByRole("tab", { name: /Adicionar/ }).click();
+    await visitor
+      .getByRole("button", { name: "Entrar para adicionar lugar" })
+      .click();
+    await visitor
+      .getByRole("textbox", { name: "E-mail", exact: true })
+      .waitFor();
+    await guest.close();
     assert.deepEqual(errors, []);
     console.log(
-      "PASS reviews UI: 35 tied timestamps, second page cursor, own old review editing, opt-in proximity and national fallback; intercepted fixtures only.",
+      "PASS reviews UI: 35 tied timestamps, second page cursor, own old review editing, opt-in proximity, national fallback, saved place navigation and explicit photo preview/upload and guest authentication route; intercepted fixtures only.",
     );
   } finally {
     await browser.close();

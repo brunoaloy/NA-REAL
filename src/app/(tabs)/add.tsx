@@ -1,3 +1,4 @@
+import { useSession } from "../../hooks/use-session";
 import { db } from "../../services/supabase";
 import { useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
@@ -14,6 +15,7 @@ import { AppHeader, CategoryChips, PlaceCard } from "../../components/design";
 import { PhotoPicker } from "../../components/photos";
 import { addPlace, type Place } from "../../services/catalog";
 export default function Add() {
+  const session = useSession();
   const params = useLocalSearchParams<{
     latitude?: string;
     longitude?: string;
@@ -63,12 +65,26 @@ export default function Add() {
         longitude: longitude ? Number(longitude) : undefined,
       });
       setCreated(id);
+      router.push({ pathname: "/place/[id]", params: { id } });
     } catch (e) {
       setError(e);
     } finally {
       setBusy(false);
     }
   }
+  if (!session)
+    return (
+      <Screen>
+        <AppHeader title="Adicionar um lugar" />
+        <Copy>
+          Entre na sua conta para cadastrar um lugar e acompanhar a revisão.
+        </Copy>
+        <PrimaryButton
+          title="Entrar para adicionar lugar"
+          onPress={() => router.push("/auth")}
+        />
+      </Screen>
+    );
   return (
     <Screen>
       <AppHeader title="Adicionar um lugar" />
@@ -161,6 +177,12 @@ export default function Add() {
         <Card>
           <Copy>Cadastro recebido. Pendente de revisão; não está público.</Copy>
           <PhotoPicker placeId={created} />
+          <PrimaryButton
+            title="Abrir lugar cadastrado"
+            onPress={() =>
+              router.push({ pathname: "/place/[id]", params: { id: created } })
+            }
+          />
         </Card>
       ) : (
         <PrimaryButton

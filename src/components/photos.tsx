@@ -3,9 +3,26 @@ import { View, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db, configured } from "../services/supabase";
-import { uploadPhoto } from "../services/photos";
+import {
+  preparePhoto,
+  uploadPreparedPhoto,
+  type PreparedPhoto,
+} from "../services/photos";
 import { Copy, PrimaryButton, ErrorState } from "./ui";
-export function PhotoPicker({
+type PhotoPickerProps = {
+  placeId?: string;
+  reviewId?: string;
+  profileId?: string;
+};
+export function PhotoPicker(props: PhotoPickerProps) {
+  return (
+    <PhotoPickerForm
+      key={JSON.stringify([props.placeId, props.reviewId, props.profileId])}
+      {...props}
+    />
+  );
+}
+function PhotoPickerForm({
   placeId,
   reviewId,
   profileId,
@@ -14,6 +31,7 @@ export function PhotoPicker({
   reviewId?: string;
   profileId?: string;
 }) {
+  const [selected, setSelected] = useState<PreparedPhoto | null>(null);
   const [error, setError] = useState<unknown>();
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -23,12 +41,24 @@ export function PhotoPicker({
     setNotice("");
     setError(undefined);
     try {
-      if (await uploadPhoto({ placeId, reviewId, profileId }, camera)) {
-        setNotice(
-          "Foto enviada. Aguardando moderação; ainda não está pública.",
-        );
-        await qc.invalidateQueries({ queryKey: ["photos"] });
-      }
+      const prepared = await preparePhoto(camera);
+      if (prepared) setSelected(prepared);
+    } catch (e) {
+      setError(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function confirm() {
+    if (!selected || busy) return;
+    setBusy(true);
+    setError(undefined);
+    setNotice("");
+    try {
+      await uploadPreparedPhoto({ placeId, reviewId, profileId }, selected);
+      setSelected(null);
+      setNotice("Foto enviada. Aguardando moderação; ainda não está pública.");
+      await qc.invalidateQueries({ queryKey: ["photos"] });
     } catch (e) {
       setError(e);
     } finally {
@@ -47,6 +77,28 @@ export function PhotoPicker({
         disabled={busy}
         onPress={() => void pick(true)}
       />
+      {selected && (
+        <>
+          <Image
+            source={{ uri: selected.uri }}
+            accessibilityLabel="Prévia da foto selecionada"
+            style={{ width: "100%", height: 180, borderRadius: 14 }}
+          />
+          <Copy>
+            Confira a imagem antes de enviar. Ela ficará pendente de revisão.
+          </Copy>
+          <PrimaryButton
+            title="Enviar foto para revisão"
+            disabled={busy}
+            onPress={() => void confirm()}
+          />
+          <PrimaryButton
+            title="Descartar seleção"
+            disabled={busy}
+            onPress={() => setSelected(null)}
+          />
+        </>
+      )}
       {notice !== "" && <Copy>{notice}</Copy>}
       {error != null && <ErrorState error={error} />}
     </View>
