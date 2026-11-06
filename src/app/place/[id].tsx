@@ -1,5 +1,7 @@
+import { createURL } from "expo-linking";
+import { PlaceSuggestions } from "../../components/place-suggestions";
 import { useState, useEffect } from "react";
-import { View, Pressable, Text } from "react-native";
+import { View, Pressable, Text, Share } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import {
   useQuery,
@@ -41,7 +43,7 @@ export default function Detail() {
       const r = await db()
         .from("places")
         .select(
-          "id,name,address,category,city,state,description,verification_status,moderation_state,created_by",
+          "id,name,address,category,city,state,description,verification_status,moderation_state,created_by,content_revision",
         )
         .eq("id", id)
         .single();
@@ -217,6 +219,24 @@ export default function Detail() {
               "Informações do catálogo comunitário. Relatos refletem experiências pessoais."}
           </Copy>
           <PlaceActions id={id} />
+          <PrimaryButton
+            title="Compartilhar lugar"
+            onPress={async () => {
+              try {
+                await Share.share({
+                  message:
+                    (place.data?.name ?? "NA REAL") +
+                    " — " +
+                    createURL("place/" + id),
+                });
+              } catch (e) {
+                setError(e);
+              }
+            }}
+          />
+          {place.data?.moderation_state === "approved" && (
+            <PlaceSuggestions id={id} revision={place.data.content_revision} />
+          )}
           <PhotoPicker placeId={id} />
           <ContentActions
             type="places"

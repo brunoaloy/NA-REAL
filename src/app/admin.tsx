@@ -42,6 +42,13 @@ export default function Admin() {
         page * pageSize,
         page * pageSize + pageSize - 1,
       );
+      const suggestions = await db()
+        .from("place_change_suggestions")
+        .select("id,place_id,field,proposed_value,reason")
+        .eq("status", "pending")
+        .order("created_at")
+        .limit(50);
+      if (suggestions.error) throw suggestions.error;
       const reports = await db()
         .from("ugc_reports")
         .select("id,target_type,target_id,reason")
@@ -66,6 +73,7 @@ export default function Admin() {
         throw queue.error ?? reports.error ?? appeals.error;
       return {
         queue: queue.data,
+        suggestions: suggestions.data,
         queueCount: queue.count ?? 0,
         reports: [
           ...reports.data,
@@ -236,6 +244,42 @@ export default function Admin() {
             disabled={busy || (page + 1) * pageSize >= q.data.queueCount}
             onPress={() => setPage((p) => p + 1)}
           />
+          <Title>Correções de lugares</Title>
+          {q.data.suggestions.map((s) => (
+            <Card key={s.id}>
+              <Copy>
+                {s.place_id} • {s.field}
+              </Copy>
+              <Copy>{s.proposed_value}</Copy>
+              <Copy>{s.reason}</Copy>
+              {[true, false].map((approve) => (
+                <PrimaryButton
+                  key={String(approve)}
+                  title={
+                    approve ? "Aplicar correção revisada" : "Rejeitar correção"
+                  }
+                  disabled={busy || reason.trim().length < 3}
+                  onPress={async () => {
+                    setBusy(true);
+                    setError(undefined);
+                    try {
+                      const r = await db().rpc("review_place_suggestion", {
+                        suggestion: s.id,
+                        approve,
+                        reason,
+                      });
+                      if (r.error) throw r.error;
+                      await qc.invalidateQueries();
+                    } catch (e) {
+                      setError(e);
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                />
+              ))}
+            </Card>
+          ))}
           <Title>Denúncias</Title>
           {q.data.reports.map((r) => (
             <Card key={r.id}>

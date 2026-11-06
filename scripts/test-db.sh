@@ -10,6 +10,6 @@ for attempt in $(seq 1 30); do
  sleep 1
 done
 docker "${docker_args[@]}" exec "$container" createdb -U postgres -T template0 nareal
-for file in tests/sql/bootstrap.sql supabase/migrations/*.sql tests/sql/rls.sql tests/sql/safe.sql; do
+for file in tests/sql/bootstrap.sql supabase/migrations/*.sql tests/sql/rls.sql tests/sql/safe.sql tests/sql/phase3.sql; do
  docker "${docker_args[@]}" exec -i "$container" psql -U postgres -d nareal -v ON_ERROR_STOP=1 < "$file"
 done

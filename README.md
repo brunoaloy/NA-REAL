@@ -27,7 +27,7 @@ Os projetos gerados `ios/` e `android/` são ignorados; configuração reproduz�
 
 ## Supabase e moderação
 
-1. Crie um projeto de desenvolvimento e aplique as **sete** migrações em `supabase/migrations` em ordem. Se as duas primeiras já foram aplicadas, execute somente 003–007. Faça backup antes de atualizar qualquer ambiente com dados reais.
+1. Crie um projeto de desenvolvimento e aplique as **oito** migrações em `supabase/migrations` em ordem. Se as duas primeiras já foram aplicadas, execute somente 003–008. Faça backup antes de atualizar qualquer ambiente com dados reais.
 2. Configure URL/chave **publicável** em `.env.local`. Nunca use service_role no app. Configure SMTP, confirmação de e-mail e redirects `nareal://auth-callback` e URL web de `/auth-callback`. O fluxo usa PKCE; links devem abrir no dispositivo com o verificador da solicitação.
 3. Publique as funções `moderate-pending`, `prepare-photo`, `delete-photo` e `delete-account` com Supabase CLI/dashboard. Todas validam identidade explicitamente no handler. Veja [configuração externa](docs/CONFIGURACAO_EXTERNA.md).
 4. Designe um moderador por SQL privilegiado: `insert into public.safe_admins(user_id) values ('UUID_DO_USUARIO_AUTH');`. Nunca permita que clientes gravem essa tabela. O painel protegido fica na rota `/admin`, inclusive na interface web.
@@ -58,3 +58,7 @@ Para smoke web, sirva `dist` em 127.0.0.1:8765 com `python3 -m http.server 8765 
 ## Limitações reais
 
 Supabase remoto, envio de e-mail, IA, Storage, mapa licenciado e dois dispositivos ainda não foram testados com credenciais reais. OAuth e push continuam não habilitados. Preferência de atualizações de lugares é persistida, mas a entrega dessas atualizações ainda não foi implementada. Cache offline permanece em memória, sem persistência após encerrar o app. Documentos legais são preliminares; revisão humana e operação da fila precisam de responsável. [Publicação](docs/PUBLICACAO_IOS_ANDROID.md) exige contas, revisão legal e testes em aparelhos.
+
+## Fase 3 incremental
+
+Detalhes do lugar oferecem compartilhamento via link do app e sugestões privadas de correção. No painel admin, as propostas podem ser revisadas e aplicadas com auditoria; propostas de versões antigas são recusadas. O link compartilhado usa o esquema/host do runtime atual, sem presumir um domínio público publicado. Consulte docs/FASE_3.md.
