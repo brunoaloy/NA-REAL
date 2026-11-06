@@ -36,6 +36,26 @@ export async function places(
   if (error) throw error;
   return data;
 }
+export async function nearbyPlaces(
+  position: { latitude: number; longitude: number },
+  search: string,
+  category: string,
+  page = 0,
+  city = "",
+  state = "",
+): Promise<Place[]> {
+  const { data, error } = await db().rpc("search_places_near", {
+    origin_latitude: position.latitude,
+    origin_longitude: position.longitude,
+    term: search.trim(),
+    category_filter: category,
+    city_filter: city.trim(),
+    state_filter: state.trim().toUpperCase(),
+    page_number: page,
+  });
+  if (error) throw error;
+  return data;
+}
 export async function userId() {
   const { data, error } = await db().auth.getUser();
   if (error) throw error;

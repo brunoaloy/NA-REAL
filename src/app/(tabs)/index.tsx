@@ -12,9 +12,42 @@ import {
   ErrorState,
 } from "../../components/ui";
 import { AppHeader, CategoryChips, PlaceCard } from "../../components/design";
-import { places } from "../../services/catalog";
+import * as Location from "expo-location";
+import { nearbyPlaces, places } from "../../services/catalog";
 import { configured } from "../../services/supabase";
 export default function Explore() {
+  const [position, setPosition] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<unknown>();
+  async function toggleNearby() {
+    if (position) {
+      setPosition(null);
+      return;
+    }
+    setLocating(true);
+    setLocationError(undefined);
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (permission.status !== "granted")
+        throw new Error(
+          "Localização não autorizada. A busca nacional continua disponível.",
+        );
+      const result = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      setPosition({
+        latitude: result.coords.latitude,
+        longitude: result.coords.longitude,
+      });
+    } catch (e) {
+      setLocationError(e);
+    } finally {
+      setLocating(false);
+    }
+  }
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
   const [city, setCity] = useState("");
@@ -22,9 +55,11 @@ export default function Explore() {
   const [advanced, setAdvanced] = useState(false);
   const [category, setCategory] = useState("Todos");
   const q = useInfiniteQuery({
-    queryKey: ["places", search, category, city, state],
+    queryKey: ["places", search, category, city, state, position],
     queryFn: ({ pageParam }) =>
-      places(search, category, pageParam, city, state),
+      position
+        ? nearbyPlaces(position, search, category, pageParam, city, state)
+        : places(search, category, pageParam, city, state),
     initialPageParam: 0,
     getNextPageParam: (last, pages) =>
       last.length === 50 ? pages.length : undefined,
@@ -71,6 +106,24 @@ export default function Explore() {
             maxLength={2}
           />
         </>
+      )}
+      <PrimaryButton
+        title={
+          locating
+            ? "Obtendo localização…"
+            : position
+              ? "Voltar à ordem por nome"
+              : "Ordenar por proximidade"
+        }
+        disabled={locating}
+        onPress={() => void toggleNearby()}
+      />
+      {locationError != null && <ErrorState error={locationError} />}
+      {position && (
+        <Copy>
+          Lugares com coordenadas, do mais próximo ao mais distante. A
+          localização é usada somente nesta busca.
+        </Copy>
       )}
       <CategoryChips value={category} onChange={setCategory} />
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
