@@ -38,3 +38,13 @@ Supabase: dois usuários reais, confirmação/recuperação de e-mail, RLS via H
 `npm run services:check` verifica apenas presença/formato, sem conexão ou valores. `npm run test:services` exige stack real LOCAL, cria A/B/operador efêmeros, usa SMTP capturado, API/Realtime/Storage/Edge e gera relatório privado ignorado. Recusa host remoto. Nesta execução foi bloqueada antes dos cenários por falta da stack (Docker sem disco), com código 2; sintaxe verificada, sem alegar resultados HTTP.
 
 `npm run mobile:check` valida configuração Expo real e perfis, sem assinatura ou aparelho. Quatro novos testes validam formatos públicos, rejeição de service_role, URL segura e erro sem vazamento. Total: 17 casos unitários. Prebuild e export não equivalem a instalação. Relatório em RELATORIO_FASE_4.md.
+
+## Regressão da exploração
+
+Após exportar web **com configuração pública Supabase** e servir o resultado como nos demais smokes, execute:
+
+```sh
+npm run test:explore-ui
+```
+
+O padrão de `SMOKE_URL` deste teste é `http://127.0.0.1:8767`; defina a variável para o servidor usado. O teste intercepta as APIs do Supabase com fixtures, sem leitura/escrita real no banco. Cobre aplicar/limpar filtros, UF inválida sem chamada ao servidor, busca, contexto da lista no mapa, atualização e retry de falha, além da proteção de cadastro para visitante. `UI_SCREENSHOT_PATH` opcional salva uma captura fora do Git. Exportação web não substitui a conferência de GPS, gestos e Apple Maps no iPhone.

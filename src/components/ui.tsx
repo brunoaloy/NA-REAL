@@ -10,6 +10,7 @@ import {
   Pressable,
   StyleSheet,
   View,
+  RefreshControl,
   TextInputProps,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,7 +21,11 @@ export const colors = {
   text: "#1F2937",
   muted: "#64748B",
 };
-export function Screen({ children }: PropsWithChildren) {
+export function Screen({
+  children,
+  onRefresh,
+  refreshing = false,
+}: PropsWithChildren<{ onRefresh?: () => void; refreshing?: boolean }>) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <OfflineBanner />
@@ -31,6 +36,16 @@ export function Screen({ children }: PropsWithChildren) {
         <ScrollView
           contentContainerStyle={s.screen}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
+              />
+            ) : undefined
+          }
         >
           {children}
         </ScrollView>

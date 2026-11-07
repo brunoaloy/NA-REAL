@@ -4,6 +4,8 @@ Aplicativo React Native/Expo existente, ampliado na Fase 2. Continuidade atual: 
 
 **Expo Go no iPhone (07/11/2026):** após Fetch/Pull de `codex/na-real-dev`, execute `npm ci` e `npm run phone`. O mapa agora usa Apple Maps no Expo Go; não precisa de estilo MapTiler. Veja [guia do iPhone](docs/EXPO_GO_IPHONE.md).
 
+**Tela inicial e busca:** interface compacta, filtros de cidade/UF aplicados de uma vez, atualização ao puxar e busca preservada ao abrir o mapa. Após receber os commits pelo GitHub Desktop, reinicie `npm run phone` para testar no iPhone.
+
 **Estado atual do banco (06/11/2026):** migrations 001–010 confirmadas no Supabase remoto, postflight estrutural aprovado e consultas públicas respondendo HTTP 200. Catálogo público vazio. Testes reais com duas contas, moderação, fotos e aparelhos continuam pendentes; Sprint 01 permanece aberto. Relatos de schema ausente nas seções históricas descrevem tentativas anteriores.
 
 ## Desenvolvimento

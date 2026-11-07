@@ -1,4 +1,4 @@
-import { Pressable, View, Text, ScrollView } from "react-native";
+import { Pressable, View, Text, ScrollView, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Card, Copy, colors } from "./ui";
@@ -62,9 +62,11 @@ export const categories = ["Todos", "Comer", "Lazer", "Compras", "Serviços"];
 export function CategoryChips({
   value,
   onChange,
+  compact = false,
 }: {
   value: string;
   onChange: (v: string) => void;
+  compact?: boolean;
 }) {
   return (
     <ScrollView
@@ -75,11 +77,14 @@ export function CategoryChips({
       {categories.map((c, i) => (
         <Pressable
           key={c}
+          accessibilityLabel={c}
           accessibilityRole="button"
           accessibilityState={{ selected: c === value }}
           onPress={() => onChange(c)}
           style={{
-            padding: 12,
+            padding: compact ? 10 : 12,
+            paddingHorizontal: compact ? 14 : 12,
+            flexDirection: compact ? "row" : "column",
             borderRadius: 20,
             backgroundColor: c === value ? "#D1FAE5" : "#F1F5F9",
             alignItems: "center",
@@ -191,5 +196,144 @@ export function StatusChip({ state }: { state: string }) {
     >
       {labels[state] ?? state}
     </Text>
+  );
+}
+
+export function SearchBar({
+  value,
+  onChange,
+  onSearch,
+  label = "Buscar lugares ou cidades",
+  buttonLabel = "Buscar",
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onSearch: (value: string) => void;
+  label?: string;
+  buttonLabel?: string;
+}) {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#F5F8F7",
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: "#DFE9E4",
+        paddingLeft: 14,
+        minHeight: 54,
+        gap: 10,
+      }}
+    >
+      <Ionicons name="search-outline" size={20} color={colors.primary} />
+      <TextInput
+        accessibilityLabel={label}
+        placeholder="Lugares ou cidades…"
+        placeholderTextColor={colors.muted}
+        value={value}
+        onChangeText={onChange}
+        maxLength={120}
+        returnKeyType="search"
+        onSubmitEditing={() => onSearch(value)}
+        style={{
+          flex: 1,
+          minWidth: 0,
+          paddingVertical: 14,
+          fontFamily: "Inter_400Regular",
+          fontSize: 14,
+          color: colors.text,
+        }}
+      />
+      {value !== "" && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Limpar texto da busca"
+          hitSlop={8}
+          onPress={() => {
+            onChange("");
+            onSearch("");
+          }}
+          style={{ padding: 6 }}
+        >
+          <Ionicons name="close-circle" size={18} color={colors.muted} />
+        </Pressable>
+      )}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={buttonLabel}
+        onPress={() => onSearch(value)}
+        style={{
+          padding: 14,
+          borderTopRightRadius: 15,
+          borderBottomRightRadius: 15,
+          backgroundColor: colors.primary,
+          minHeight: 52,
+          justifyContent: "center",
+        }}
+      >
+        <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+      </Pressable>
+    </View>
+  );
+}
+export function DiscoveryHero() {
+  return (
+    <View
+      style={{
+        backgroundColor: "#E9F5EF",
+        borderRadius: 24,
+        padding: 23,
+        overflow: "hidden",
+        gap: 10,
+      }}
+    >
+      <View
+        style={{
+          position: "absolute",
+          right: -25,
+          top: -24,
+          width: 145,
+          height: 145,
+          borderRadius: 80,
+          borderWidth: 22,
+          borderColor: "#D8EDE0",
+        }}
+      />
+      <Text
+        style={{
+          fontFamily: "Inter_600SemiBold",
+          fontSize: 9,
+          letterSpacing: 1.5,
+          color: colors.primary,
+        }}
+      >
+        DESCUBRA. AVALIE. COMPARTILHE.
+      </Text>
+      <Text
+        accessibilityRole="header"
+        style={{
+          fontFamily: "Inter_700Bold",
+          fontSize: 27,
+          lineHeight: 33,
+          letterSpacing: -0.7,
+          color: "#104F47",
+          maxWidth: 255,
+        }}
+      >
+        Um novo olhar{`\n`}para cada lugar.
+      </Text>
+      <Text
+        style={{
+          fontFamily: "Inter_400Regular",
+          fontSize: 13,
+          lineHeight: 20,
+          color: "#4E6F66",
+          maxWidth: 260,
+        }}
+      >
+        Descobertas de quem vive a cidade.{`\n`}A próxima pode ser sua.
+      </Text>
+    </View>
   );
 }

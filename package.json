@@ -78,7 +78,8 @@
     "start:lan": "node scripts/start-phone.cjs --lan",
     "start:dev-client": "expo start --dev-client",
     "phone": "node scripts/start-phone.cjs",
-    "setup:mobile": "node scripts/setup-mobile.cjs"
+    "setup:mobile": "node scripts/setup-mobile.cjs",
+    "test:explore-ui": "node tests/explore-smoke.cjs"
   },
   "private": true
 }

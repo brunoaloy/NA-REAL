@@ -1,37 +1,55 @@
 import { useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import * as Location from "expo-location";
+import { Keyboard } from "react-native";
+import { requestPosition } from "../services/location";
+import { mapFilters, mapCenter } from "../validation/explore";
 import {
   Screen,
   Copy,
-  Field,
   PrimaryButton,
   EmptyState,
   ErrorState,
 } from "../components/ui";
-import { AppHeader, CategoryChips, PlaceCard } from "../components/design";
+import {
+  AppHeader,
+  CategoryChips,
+  PlaceCard,
+  SearchBar,
+} from "../components/design";
 import MapCanvas from "../components/map-canvas";
 import { builtInMap } from "../services/map-runtime";
 import { BRAZIL, places, type Bounds } from "../services/catalog";
 import { configured } from "../services/supabase";
 export default function MapPage() {
-  const params = useLocalSearchParams<{ pick?: string }>();
+  const params = useLocalSearchParams<{
+    pick?: string;
+    search?: string;
+    category?: string;
+    city?: string;
+    state?: string;
+    latitude?: string;
+    longitude?: string;
+  }>();
+  const initial = mapFilters(params);
   const [bounds, setBounds] = useState<Bounds>(BRAZIL);
-  const [input, setInput] = useState("");
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("Todos");
+  const [input, setInput] = useState(initial.search);
+  const [search, setSearch] = useState(initial.search);
+  const [category, setCategory] = useState(initial.category);
   const [selected, setSelected] = useState("");
-  const [center, setCenter] = useState<[number, number]>();
+  const [center, setCenter] = useState<[number, number] | undefined>(() =>
+    mapCenter(params),
+  );
+  const [locating, setLocating] = useState(false);
   const [error, setError] = useState<unknown>();
   const style = process.env.EXPO_PUBLIC_MAP_STYLE_URL;
   const mapAvailable = builtInMap || Boolean(style);
   const q = useInfiniteQuery({
-    queryKey: ["map", bounds, search, category],
+    queryKey: ["map", bounds, search, category, initial.city, initial.state],
     enabled: configured && mapAvailable,
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
-      places(search, category, pageParam, "", "", bounds),
+      places(search, category, pageParam, initial.city, initial.state, bounds),
     getNextPageParam: (last, pages) =>
       last.length === 50 && pages.length < 10 ? pages.length : undefined,
   });
@@ -39,36 +57,45 @@ export default function MapPage() {
   async function locate() {
     setError(undefined);
     try {
-      const permission = await Location.requestForegroundPermissionsAsync();
-      if (!permission.granted)
-        throw new Error(
-          "Localização negada. Busque manualmente por nome ou cidade.",
-        );
-      const p = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      setCenter([p.coords.longitude, p.coords.latitude]);
+      setLocating(true);
+      const p = await requestPosition();
+      setCenter([p.longitude, p.latitude]);
     } catch (e) {
       setError(e);
+    } finally {
+      setLocating(false);
     }
   }
   return (
-    <Screen>
+    <Screen
+      onRefresh={
+        configured && mapAvailable ? () => void q.refetch() : undefined
+      }
+      refreshing={q.isRefetching && !q.isFetchingNextPage}
+    >
       <AppHeader
         title={params.pick ? "Selecionar posição" : "Mapa de lugares"}
         back
       />
-      <Field
+      <SearchBar
         label="Buscar nome ou cidade"
+        buttonLabel="Buscar nesta área"
         value={input}
-        onChangeText={setInput}
-        onSubmitEditing={() => setSearch(input)}
+        onChange={setInput}
+        onSearch={(value) => {
+          Keyboard.dismiss();
+          const next = value.trim();
+          setInput(next);
+          if (next === search && configured && mapAvailable) void q.refetch();
+          else setSearch(next);
+        }}
       />
-      <PrimaryButton
-        title="Buscar nesta área"
-        onPress={() => setSearch(input)}
-      />
-      <CategoryChips value={category} onChange={setCategory} />
+      {(initial.city || initial.state) && (
+        <Copy>
+          Região: {[initial.city, initial.state].filter(Boolean).join(", ")}
+        </Copy>
+      )}
+      <CategoryChips compact value={category} onChange={setCategory} />
       {!mapAvailable ? (
         <EmptyState text="Mapa não configurado. Defina um estilo de provedor licenciado; a busca em lista continua disponível." />
       ) : (
@@ -101,7 +128,8 @@ export default function MapPage() {
         </Copy>
       )}
       <PrimaryButton
-        title="Perto de mim (opcional)"
+        title={locating ? "Obtendo localização…" : "Perto de mim (opcional)"}
+        disabled={locating}
         onPress={() => void locate()}
       />
       {error != null && <ErrorState error={error} />}
