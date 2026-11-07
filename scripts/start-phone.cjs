@@ -1,8 +1,10 @@
 const { spawn } = require("node:child_process");
 const path = require("node:path");
-const { ensureMobileConfiguration } = require("./setup-mobile.cjs");
+const { checkMobileDependencies } = require("./check-mobile-dependencies.cjs");
 async function main() {
   process.chdir(path.resolve(__dirname, ".."));
+  checkMobileDependencies(process.cwd());
+  const { ensureMobileConfiguration } = require("./setup-mobile.cjs");
   const env = await ensureMobileConfiguration();
   console.log("NA REAL no Expo Go — mantenha este terminal aberto.");
   console.log(

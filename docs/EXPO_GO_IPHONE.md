@@ -82,3 +82,16 @@ Para gerar um túnel a partir desta nuvem, é necessário ajustar a configuraç�
 ## Validação e limites
 
 Consulte o bloco mais recente de `STATUS.md`. Exportar um bundle iOS e verificar a seleção de módulos não substitui abrir o app no seu iPhone. Fluxos reais com contas, confirmação SMTP, câmera, fotos/Edge Functions e moderação precisam de validação integrada. Nenhuma conta de teste foi criada, nenhum e-mail foi enviado e nenhuma escrita foi feita no banco nesta adaptação.
+
+## Erro “Unable to resolve expo-linear-gradient”
+
+Esse erro indica que a dependência ainda não foi instalada no node_modules desse computador. Fazer Pull transfere o código e o lockfile, mas não instala os pacotes. No terminal aberto pelo GitHub Desktop na pasta do NA-REAL:
+
+```sh
+# Primeiro pare o servidor antigo com Ctrl+C.
+npm ci
+# Aguarde terminar sem erros antes de continuar:
+npm run phone
+```
+
+O launcher limpa o cache e agora detecta dependências ausentes/desatualizadas antes de iniciar o Expo. Não precisa reaplicar SQL, trocar tokens ou reinstalar o Expo Go para esse erro. Se npm ci falhar, o erro de instalação precisa ser resolvido antes de abrir outro QR.
