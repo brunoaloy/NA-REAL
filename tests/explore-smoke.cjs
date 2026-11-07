@@ -67,7 +67,7 @@ const { readEnvironment } = require("../scripts/setup-mobile.cjs");
       errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(process.env.SMOKE_URL || "http://127.0.0.1:8767");
-    await page.getByRole("button", { name: "Começar como visitante" }).click();
+    await page.getByRole("button", { name: "Explorar como visitante" }).click();
     await page
       .getByRole("heading", { name: "A próxima descoberta pode ser sua." })
       .waitFor();

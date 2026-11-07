@@ -40,6 +40,12 @@ export function errorMessage(error: unknown): string {
       "Este conteúdo já foi cadastrado. Consulte ou edite o cadastro existente.",
     "23514": "Confira os campos informados antes de enviar.",
     "22P02": "Confira os campos informados antes de enviar.",
+    weak_password: "Escolha uma senha mais forte, com pelo menos 8 caracteres.",
+    user_already_exists:
+      "Já existe uma conta com esse e-mail. Entre ou recupere sua senha.",
+    signup_disabled:
+      "Novos cadastros estão indisponíveis no momento. Tente novamente mais tarde.",
+    email_address_invalid: "Informe um e-mail válido para continuar.",
     invalid_credentials: "E-mail ou senha incorretos.",
     email_not_confirmed: "Confirme seu e-mail antes de entrar.",
     over_request_rate_limit:

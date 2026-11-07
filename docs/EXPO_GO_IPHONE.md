@@ -47,7 +47,7 @@ Depois de mudar o `.env.local`, reinicie o servidor. `npm run services:check` ve
 1. Instale ou atualize o **Expo Go** pela App Store. O projeto usa Expo SDK 58.
 2. Com `npm run phone` ainda aberto no computador, leia o QR code usando a **Câmera do iPhone**.
 3. Toque em **Abrir no Expo Go** e aguarde o primeiro carregamento.
-4. Escolha **Começar como visitante**. Sem lugares aprovados no catálogo, a lista fica vazia; isso não significa falha de conexão.
+4. Escolha **Explorar como visitante**. Sem lugares aprovados no catálogo, a lista fica vazia; isso não significa falha de conexão.
 5. Para contribuir, entre com e-mail e senha. Cadastro exige confirmação por e-mail conforme as configurações do projeto.
 
 Se ambos os aparelhos estiverem na mesma rede Wi-Fi e o túnel estiver bloqueado, use:

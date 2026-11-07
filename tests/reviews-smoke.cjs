@@ -177,7 +177,7 @@ const assert = require("node:assert/strict");
     await context.grantPermissions(["geolocation"], { origin: base });
     await context.setGeolocation({ latitude: -8.05, longitude: -34.88 });
     await page.goto(base);
-    await page.getByRole("button", { name: "Começar como visitante" }).click();
+    await page.getByRole("button", { name: "Explorar como visitante" }).click();
     await page.getByText("Explore o catálogo", { exact: true }).waitFor();
     assert.equal(nearSeen, false);
     await page
@@ -277,7 +277,7 @@ const assert = require("node:assert/strict");
     visitor.on("pageerror", (e) => errors.push(e.message));
     await visitor.goto(base);
     await visitor
-      .getByRole("button", { name: "Começar como visitante" })
+      .getByRole("button", { name: "Explorar como visitante" })
       .click();
     await visitor.getByRole("tab", { name: /Adicionar/ }).click();
     await visitor

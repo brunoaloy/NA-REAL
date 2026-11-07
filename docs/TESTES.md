@@ -48,3 +48,9 @@ npm run test:explore-ui
 ```
 
 O padrão de `SMOKE_URL` deste teste é `http://127.0.0.1:8767`; defina a variável para o servidor usado. O teste intercepta as APIs do Supabase com fixtures, sem leitura/escrita real no banco. Cobre aplicar/limpar filtros, UF inválida sem chamada ao servidor, busca, contexto da lista no mapa, atualização e retry de falha, além da proteção de cadastro para visitante. `UI_SCREENSHOT_PATH` opcional salva uma captura fora do Git. Exportação web não substitui a conferência de GPS, gestos e Apple Maps no iPhone.
+
+## Apresentação e autenticação
+
+`npm run test:onboarding-ui` usa o bundle web com configuração pública do Supabase e o servidor indicado em `SMOKE_URL` (padrão http://127.0.0.1:8768). Todas as respostas Auth/REST são interceptadas: não cria contas nem envia e-mails reais. Cobre as três telas do mockup, recuperação, erros/validações, confirmação de senha, mostrar/ocultar, links legais e navegação após login. Também confere acesso de visitante em 320×568 e ausência de transbordamento horizontal. `UI_SCREENSHOT_DIR` opcional salva capturas fora do Git.
+
+O teste não comprova entrega SMTP, allowlist de redirects PKCE, teclado do iOS nem instalação no Expo Go. Esses fluxos precisam ser conferidos pelo proprietário no aparelho com o servidor local ativo. O app usa as configurações Supabase existentes; esta entrega não altera Auth remoto nem banco.
