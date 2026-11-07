@@ -3,7 +3,8 @@ const { existsSync } = require("node:fs");
 const { clientConfiguration } = require("../src/validation/client-config.ts");
 const c = clientConfiguration(
   process.env.EXPO_PUBLIC_SUPABASE_URL,
-  process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
   process.env.NA_REAL_ALLOW_LOCAL_HTTP === "1",
 );
 console.log("Formato Supabase público (sem teste de conexão): " + c.status);

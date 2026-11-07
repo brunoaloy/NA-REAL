@@ -12,12 +12,10 @@ Node 24 e npm 11:
 
 ```sh
 npm ci
-cp .env.example .env.local
-# Configure seu projeto Supabase e, opcionalmente, o provedor de mapas.
-npm start
+npm run phone # verifica/recupera a configuração pública antes de abrir o Expo Go
 ```
 
-Para **começar pelo iPhone com Expo Go**, use `npm run phone` e leia o QR com a Câmera do iPhone. O comando força Expo Go e usa túnel ngrok, sem exigir conta Expo, Xcode ou EAS. Mantenha o terminal aberto. No GitHub Desktop, faça Fetch/Pull de `codex/na-real-dev` antes de instalar. Guia: [EXPO_GO_IPHONE](docs/EXPO_GO_IPHONE.md).
+Para **começar pelo iPhone com Expo Go**, use `npm run phone` e leia o QR com a Câmera do iPhone. O comando força Expo Go e usa túnel ngrok, sem exigir conta Expo, Xcode ou EAS. Se o `.env.local` estiver ausente, o comando tenta recuperar a configuração pública pelo login da CLI Supabase; se necessário, execute `npx supabase login`. O QR só é gerado após uma consulta de leitura ao catálogo passar. Mantenha o terminal aberto. No GitHub Desktop, faça Fetch/Pull de `codex/na-real-dev` antes de instalar. Guia: [EXPO_GO_IPHONE](docs/EXPO_GO_IPHONE.md).
 
 Sem backend, a interface informa indisponibilidade e impede sucesso fictício. Não há dados de comunidade simulados. No Expo Go, o mapa usa `react-native-maps` (Apple Maps no iPhone), sem estilo ou chave de mapas adicional. MapLibre permanece nos development builds e na web; nesses runtimes, configure um estilo licenciado. `npm run web` executa a interface web.
 

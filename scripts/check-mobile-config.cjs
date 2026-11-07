@@ -39,8 +39,9 @@ const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
 if (!pkg.dependencies["react-native-maps"])
   throw new Error("Expo Go map dependency missing");
 if (
-  !pkg.scripts.start.includes("--go") ||
-  !pkg.scripts["start:tunnel"].includes("--go")
+  !pkg.scripts.start.includes("start-phone.cjs") ||
+  !pkg.scripts["start:tunnel"].includes("start-phone.cjs") ||
+  !fs.readFileSync("scripts/start-phone.cjs", "utf8").includes('"--go"')
 )
   throw new Error("Default mobile commands must target Expo Go");
 if (!pkg.devDependencies["@expo/ngrok"])

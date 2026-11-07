@@ -108,3 +108,13 @@ Verificações desta entrega: TypeScript, lint sem avisos, formatação, 28 test
 Bloqueio observado: `npm run phone` nesta nuvem encerrou com timeout de conexão ngrok. Probes HTTPS para api.expo.dev, connect.ngrok-agent.com e tunnel.us.ngrok.com receberam 403 do proxy. Não existe QR público desta nuvem nesta entrega. O proprietário pode gerar o QR no computador após Fetch/Pull e `npm ci`, mantendo o `.env.local` público que já usa no projeto. Nenhum token administrativo entrou no Git e nenhuma alteração foi feita no banco.
 
 Para Auth por link em Expo Go, o callback exp:// do servidor atual precisa ser permitido nas configurações Supabase. Login por senha em conta confirmada independe desse redirect. Moderação/Edge Functions/SMTP, câmera e fluxos entre contas ainda exigem validação integrada; o catálogo público continua vazio.
+
+## Configuração ausente no iPhone — 07/11/2026
+
+O proprietário abriu o Expo Go, mas o bundle recebido não tinha a configuração pública do Supabase. O `.env.local` da nuvem não é transportado pelo GitHub Desktop. A inicialização anterior permitia abrir a interface nesse estado.
+
+Adicionado `scripts/setup-mobile.cjs`: lê os arquivos de ambiente na precedência de desenvolvimento, aceita o alias ANON_KEY, verifica tipo da chave e tenta recuperar a configuração pública pela CLI local quando ausente. A saída da CLI fica privada; apenas publishable/anon validadas podem ser salvas no `.env.local` ignorado, preservando outras configurações. Falta de login permite orientação/entrada manual no terminal. Chaves administrativas são recusadas.
+
+Os comandos Expo Go usam o mesmo launcher, que testa a RPC de busca somente leitura antes de iniciar Metro, passa os valores públicos diretamente ao processo e limpa o cache. Falhas interrompem a inicialização; nenhuma alteração de schema/dados é realizada. App e app.config aceitam o alias EXPO_PUBLIC_SUPABASE_ANON_KEY com as mesmas restrições.
+
+Reprodução real: pasta temporária sem `.env`, recuperação pela CLI 3.0.0 autenticada e consulta HTTP ao catálogo remoto passaram. O catálogo continua vazio. As credenciais não foram impressas nem incluídas no Git. Passaram 35 testes unitários, TypeScript, lint, formatação e configuração mobile. Bundles iOS/web com apenas o alias ANON_KEY também foram exportados. Smoke Chromium desse bundle consultou o catálogo real (HTTP 200), mostrou o estado vazio e não apresentou o aviso de configuração ausente nem erros JavaScript. A execução Windows e o novo bundle no iPhone ainda dependem do Fetch/Pull e reinício pelo proprietário.

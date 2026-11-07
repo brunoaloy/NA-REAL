@@ -54,7 +54,7 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "start": "expo start --go",
+    "start": "node scripts/start-phone.cjs --lan",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -74,10 +74,11 @@
     "test:reviews-ui": "node tests/reviews-smoke.cjs",
     "remote:prepare": "node scripts/remote-migrations.cjs prepare",
     "remote:verify": "node scripts/remote-migrations.cjs verify",
-    "start:tunnel": "expo start --go --tunnel ngrok",
-    "start:lan": "expo start --go --lan",
+    "start:tunnel": "node scripts/start-phone.cjs --tunnel ngrok",
+    "start:lan": "node scripts/start-phone.cjs --lan",
     "start:dev-client": "expo start --dev-client",
-    "phone": "node scripts/start-phone.cjs"
+    "phone": "node scripts/start-phone.cjs",
+    "setup:mobile": "node scripts/setup-mobile.cjs"
   },
   "private": true
 }

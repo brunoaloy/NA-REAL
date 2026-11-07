@@ -14,16 +14,29 @@ npm ci
 npm run phone
 ```
 
+O comando agora verifica a configuração **antes de gerar o QR**. Se o `.env.local` não veio pelo Git, tenta recuperar apenas a chave pública pelo login local da CLI Supabase e salva o arquivo ignorado. Se não houver login, ele orienta a informar URL/chave pública no terminal. Para autenticar a CLI primeiro:
+
+```sh
+npx supabase login
+npm run phone
+```
+
+Nunca envie o token de login pelo chat. Essa operação usa a API de gerenciamento para leitura; não executa migrações.
+
+Antes de abrir o Expo, o terminal deve mostrar **Supabase conectado**. O comando limpa o cache para evitar reutilizar um bundle sem configuração. Se a conexão falhar, ele para com uma mensagem clara antes de gerar um QR inválido. Você também pode executar apenas `npm run setup:mobile` para preparar/verificar o ambiente.
+
 Use Node 24 e npm 11. O comando `phone` funciona em Windows, macOS e Linux. Não usa Docker, PowerShell scripts, Xcode, assinatura Apple nem EAS. As dependências de túnel são instaladas pelo `npm ci`.
 
 ## Configuração Supabase
 
-Mantenha seu `.env.local` existente na raiz do repositório. Esse arquivo não vem pelo Git e não deve ser commitado. Se ainda não existe, copie `.env.example` para `.env.local` e preencha:
+Seu `.env.local` existente é preservado. Esse arquivo não vem pelo Git e não deve ser commitado. A recuperação automática é feita quando a configuração está ausente; uma configuração inválida ou recusada não é substituída silenciosamente. Para configurar manualmente, copie `.env.example` para `.env.local` e preencha:
 
 ```dotenv
 EXPO_PUBLIC_SUPABASE_URL=https://SEU_PROJECT_REF.supabase.co
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=SUA_CHAVE_PUBLICAVEL_OU_ANON
 ```
+
+O nome alternativo `EXPO_PUBLIC_SUPABASE_ANON_KEY` também é aceito no app, no build e no comando de inicialização.
 
 O projeto NA REAL tem referência `zcnfssihiqmbrlwvlsme`. A chave **publishable** ou **anon** está no painel Supabase → Project Settings → API Keys. Nunca use `SUPABASE_ACCESS_TOKEN`, `service_role` ou `sb_secret_` no app. `EXPO_PUBLIC_MAP_STYLE_URL` pode ficar vazio no Expo Go.
 
@@ -49,7 +62,7 @@ O túnel expõe temporariamente o servidor de desenvolvimento; use só configura
 
 ## O que mudou para o Expo Go
 
-- `npm start`, `npm run start:lan`, `npm run start:tunnel` e `npm run phone` selecionam explicitamente `--go`, mesmo com `expo-dev-client` instalado.
+- `npm start`, `npm run start:lan`, `npm run start:tunnel` e `npm run phone` verificam a configuração e selecionam explicitamente `--go`, mesmo com `expo-dev-client` instalado.
 - Expo Go carrega o mapa nativo já incluído no cliente; MapLibre é carregado somente em development builds. No iPhone, Apple Maps dispensa uma chave MapTiler/Google.
 - Mapa, seleção por pressão prolongada, marcadores, busca por área e centralização por localização continuam disponíveis. No Expo Go os marcadores são individuais, sem clusters MapLibre.
 - O mapa web continua MapLibre e precisa de estilo licenciado. `npm run start:dev-client` mantém o fluxo de compilação própria anterior.
