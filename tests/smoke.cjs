@@ -29,7 +29,9 @@ const assert = require("node:assert/strict");
       .fill("Recife");
     await page.getByRole("textbox", { name: "UF", exact: true }).fill("PE");
     await page.getByRole("button", { name: "Mapa", exact: true }).click();
-    await page.getByText("Mapa não configurado.", { exact: false }).waitFor();
+    await page
+      .getByText("O mapa não está disponível nesta versão.", { exact: false })
+      .waitFor();
     await page.screenshot({
       path: "docs/screenshots/fase2-mapa-nao-configurado.png",
       fullPage: true,

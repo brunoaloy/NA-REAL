@@ -8,6 +8,7 @@ import { userId } from "./catalog";
 export type PreparedPhoto = { uri: string; bytes: ArrayBuffer };
 export async function preparePhoto(
   camera = false,
+  avatar = false,
 ): Promise<PreparedPhoto | null> {
   await userId();
   const permission = camera
@@ -20,11 +21,15 @@ export async function preparePhoto(
         mediaTypes: ["images"],
         quality: 1,
         exif: false,
+        allowsEditing: avatar,
+        aspect: [1, 1],
       })
     : await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         quality: 1,
         exif: false,
+        allowsEditing: avatar,
+        aspect: [1, 1],
       });
   if (selected.canceled) return null;
   const source = selected.assets[0];

@@ -81,7 +81,8 @@
     "phone": "node scripts/start-phone.cjs",
     "setup:mobile": "node scripts/setup-mobile.cjs",
     "test:explore-ui": "node tests/explore-smoke.cjs",
-    "test:onboarding-ui": "node tests/onboarding-smoke.cjs"
+    "test:onboarding-ui": "node tests/onboarding-smoke.cjs",
+    "test:member-ui": "node tests/member-ui-smoke.cjs"
   },
   "private": true
 }

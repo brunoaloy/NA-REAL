@@ -18,6 +18,14 @@ export default function MapCanvas(p: MapCanvasProps) {
       mapStyle={p.styleUrl}
       attribution
       onRegionDidChange={(e) => p.onBounds(e.nativeEvent.bounds)}
+      onPress={
+        p.onPick
+          ? (e) => {
+              const [longitude, latitude] = e.nativeEvent.lngLat;
+              p.onPick?.(longitude, latitude);
+            }
+          : undefined
+      }
       onLongPress={(e) => {
         const [x, y] = e.nativeEvent.lngLat;
         p.onPick?.(x, y);
@@ -28,6 +36,38 @@ export default function MapCanvas(p: MapCanvasProps) {
         initialViewState={{ center: [-51, -15], zoom: 3 }}
         {...(p.center ? { center: p.center, zoom: 13 } : {})}
       />
+      {p.selectedPoint && (
+        <GeoJSONSource
+          id="chosen-location"
+          data={{
+            type: "FeatureCollection",
+            features: [
+              {
+                type: "Feature",
+                properties: {},
+                geometry: {
+                  type: "Point",
+                  coordinates: [
+                    p.selectedPoint.longitude,
+                    p.selectedPoint.latitude,
+                  ],
+                },
+              },
+            ],
+          }}
+        >
+          <Layer
+            id="chosen-location-dot"
+            type="circle"
+            paint={{
+              "circle-color": "#3882F6",
+              "circle-radius": 13,
+              "circle-stroke-color": "#FFFFFF",
+              "circle-stroke-width": 3,
+            }}
+          />
+        </GeoJSONSource>
+      )}
       <GeoJSONSource
         id="places"
         ref={source}

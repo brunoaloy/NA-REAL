@@ -334,7 +334,7 @@ export default function Explore() {
             flex: 1,
           }}
         >
-          {filtered ? "Resultados da busca" : "Explore o catálogo"}
+          {filtered ? "Resultados da busca" : "Descubra lugares"}
         </Text>
         <Pressable
           accessibilityRole="button"
@@ -474,6 +474,14 @@ export default function Explore() {
                     Ver todos os lugares
                   </Text>
                 </Pressable>
+              )}
+              {!filtered && !position && (
+                <View style={{ alignSelf: "stretch" }}>
+                  <PrimaryButton
+                    title="Explorar comércios no mapa"
+                    onPress={openMap}
+                  />
+                </View>
               )}
               <View style={{ alignSelf: "stretch" }}>
                 <PrimaryButton

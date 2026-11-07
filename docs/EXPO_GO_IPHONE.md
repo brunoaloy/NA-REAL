@@ -95,3 +95,11 @@ npm run phone
 ```
 
 O launcher limpa o cache e agora detecta dependências ausentes/desatualizadas antes de iniciar o Expo. Não precisa reaplicar SQL, trocar tokens ou reinstalar o Expo Go para esse erro. Se npm ci falhar, o erro de instalação precisa ser resolvido antes de abrir outro QR.
+
+## Encontrar comércios e editar seu perfil
+
+No Perfil, toque em Editar perfil ou no avatar. Nome e descrição já vêm preenchidos; escolha uma foto se quiser e use Salvar alterações. O @ é opcional e fica em Personalizar meu @. A foto selecionada só é enviada ao salvar; as alterações públicas continuam passando por revisão.
+
+Na exploração, use o botão Explorar comércios no mapa ou escolha uma cidade nos filtros e toque em Ver mapa. No mapa, digite cidade e UF (por exemplo Recife, PE), toque em Localizar cidade e aproxime. Os pontos de interesse disponíveis são fornecidos pelo Apple Maps no iPhone; os pins verdes identificam lugares da comunidade. A cobertura varia e não garante todos os estabelecimentos. O atalho Abrir busca no aplicativo Mapas permite continuar a procura no provedor.
+
+Ao adicionar um lugar, informe o endereço e use Encontrar pelo endereço ou Marcar entrada no mapa. Toque no mapa, confira o pino azul e confirme Usar este local. Não é necessário digitar coordenadas. A posição é aproximada e pode ser ajustada antes de enviar.

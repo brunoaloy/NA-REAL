@@ -35,7 +35,8 @@ export function AppHeader({
         <Text
           accessibilityRole="header"
           style={{
-            fontSize: back ? 20 : 28,
+            fontSize: back ? 20 : title === "na real." ? 28 : 22,
+            flexShrink: 1,
             fontFamily: "Inter_700Bold",
             color: colors.primary,
           }}
@@ -47,7 +48,14 @@ export function AppHeader({
         accessibilityRole="button"
         accessibilityLabel="Notificações"
         onPress={() => router.push("/notifications")}
-        style={{ padding: 10 }}
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: 16,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#F1F7F3",
+        }}
       >
         <Ionicons
           name="notifications-outline"
@@ -63,10 +71,12 @@ export function CategoryChips({
   value,
   onChange,
   compact = false,
+  includeAll = true,
 }: {
   value: string;
   onChange: (v: string) => void;
   compact?: boolean;
+  includeAll?: boolean;
 }) {
   return (
     <ScrollView
@@ -74,49 +84,51 @@ export function CategoryChips({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{ gap: 8 }}
     >
-      {categories.map((c, i) => (
-        <Pressable
-          key={c}
-          accessibilityLabel={c}
-          accessibilityRole="button"
-          accessibilityState={{ selected: c === value }}
-          onPress={() => onChange(c)}
-          style={{
-            padding: compact ? 10 : 12,
-            paddingHorizontal: compact ? 14 : 12,
-            flexDirection: compact ? "row" : "column",
-            borderRadius: 20,
-            backgroundColor: c === value ? "#D1FAE5" : "#F1F5F9",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          <Ionicons
-            name={
-              (
-                [
-                  "grid-outline",
-                  "restaurant-outline",
-                  "leaf-outline",
-                  "bag-outline",
-                  "construct-outline",
-                ] as const
-              )[i]
-            }
-            size={20}
-            color={colors.primary}
-          />
-          <Text
+      {categories.map((c, i) =>
+        !includeAll && c === "Todos" ? null : (
+          <Pressable
+            key={c}
+            accessibilityLabel={c}
+            accessibilityRole="button"
+            accessibilityState={{ selected: c === value }}
+            onPress={() => onChange(c)}
             style={{
-              fontFamily: "Inter_400Regular",
-              fontSize: 12,
-              color: colors.text,
+              padding: compact ? 10 : 12,
+              paddingHorizontal: compact ? 14 : 12,
+              flexDirection: compact ? "row" : "column",
+              borderRadius: 20,
+              backgroundColor: c === value ? "#D1FAE5" : "#F1F5F9",
+              alignItems: "center",
+              gap: 6,
             }}
           >
-            {c}
-          </Text>
-        </Pressable>
-      ))}
+            <Ionicons
+              name={
+                (
+                  [
+                    "grid-outline",
+                    "restaurant-outline",
+                    "leaf-outline",
+                    "bag-outline",
+                    "construct-outline",
+                  ] as const
+                )[i]
+              }
+              size={20}
+              color={colors.primary}
+            />
+            <Text
+              style={{
+                fontFamily: "Inter_400Regular",
+                fontSize: 12,
+                color: colors.text,
+              }}
+            >
+              {c}
+            </Text>
+          </Pressable>
+        ),
+      )}
     </ScrollView>
   );
 }
@@ -205,12 +217,16 @@ export function SearchBar({
   onSearch,
   label = "Buscar lugares ou cidades",
   buttonLabel = "Buscar",
+  placeholder = "Lugares ou cidades…",
+  busy = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   onSearch: (value: string) => void;
   label?: string;
   buttonLabel?: string;
+  placeholder?: string;
+  busy?: boolean;
 }) {
   return (
     <View
@@ -229,7 +245,8 @@ export function SearchBar({
       <Ionicons name="search-outline" size={20} color={colors.primary} />
       <TextInput
         accessibilityLabel={label}
-        placeholder="Lugares ou cidades…"
+        placeholder={placeholder}
+        editable={!busy}
         placeholderTextColor={colors.muted}
         value={value}
         onChangeText={onChange}
@@ -249,6 +266,7 @@ export function SearchBar({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Limpar texto da busca"
+          disabled={busy}
           hitSlop={8}
           onPress={() => {
             onChange("");
@@ -262,6 +280,8 @@ export function SearchBar({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={buttonLabel}
+        disabled={busy}
+        accessibilityState={{ disabled: busy, busy }}
         onPress={() => onSearch(value)}
         style={{
           padding: 14,

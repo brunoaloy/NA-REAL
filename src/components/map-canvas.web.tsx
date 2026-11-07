@@ -89,6 +89,7 @@ export default function MapCanvas(p: MapCanvasProps) {
           });
         }
       });
+      m.on("click", (e) => props.current.onPick?.(e.lngLat.lng, e.lngLat.lat));
       m.on("contextmenu", (e) =>
         props.current.onPick?.(e.lngLat.lng, e.lngLat.lat),
       );
@@ -124,6 +125,22 @@ export default function MapCanvas(p: MapCanvasProps) {
   useEffect(() => {
     if (p.center) map.current?.easeTo({ center: p.center, zoom: 13 });
   }, [p.center]);
+  useEffect(() => {
+    if (!p.selectedPoint || !map.current) return;
+    const marker = new maplibregl.Marker({
+      color: "#3882F6",
+      draggable: Boolean(p.onPick),
+    })
+      .setLngLat([p.selectedPoint.longitude, p.selectedPoint.latitude])
+      .addTo(map.current);
+    marker.on("dragend", () => {
+      const point = marker.getLngLat();
+      props.current.onPick?.(point.lng, point.lat);
+    });
+    return () => {
+      marker.remove();
+    };
+  }, [p.selectedPoint, p.onPick]);
   return (
     <>
       {error != null && <ErrorState error={error} />}

@@ -19,6 +19,16 @@ export default function ExpoGoMap(p: MapCanvasProps) {
       ref={map}
       accessibilityLabel="Mapa interativo de lugares"
       style={{ height: 420, width: "100%", borderRadius: 18 }}
+      showsPointsOfInterests
+      showsBuildings
+      onPress={
+        p.onPick
+          ? (event) => {
+              const { longitude, latitude } = event.nativeEvent.coordinate;
+              p.onPick?.(longitude, latitude);
+            }
+          : undefined
+      }
       initialRegion={{
         longitude: p.center?.[0] ?? -51,
         latitude: p.center?.[1] ?? -15,
@@ -31,6 +41,18 @@ export default function ExpoGoMap(p: MapCanvasProps) {
         p.onPick?.(longitude, latitude);
       }}
     >
+      {p.selectedPoint && (
+        <Marker
+          coordinate={p.selectedPoint}
+          title="Entrada do lugar"
+          pinColor="#3882F6"
+          draggable
+          onDragEnd={(event) => {
+            const { longitude, latitude } = event.nativeEvent.coordinate;
+            p.onPick?.(longitude, latitude);
+          }}
+        />
+      )}
       {p.places
         .filter((place) => place.latitude != null && place.longitude != null)
         .map((place) => (
@@ -43,7 +65,11 @@ export default function ExpoGoMap(p: MapCanvasProps) {
             title={place.name}
             description={`${place.category} · ${place.city}, ${place.state}`}
             pinColor="#0F766E"
-            onPress={() => p.onSelect(place.id)}
+            onPress={() =>
+              p.onPick
+                ? p.onPick(place.longitude!, place.latitude!)
+                : p.onSelect(place.id)
+            }
           />
         ))}
     </MapView>

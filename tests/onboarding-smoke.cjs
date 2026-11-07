@@ -229,7 +229,7 @@ const { readEnvironment } = require("../scripts/setup-mobile.cjs");
     await page.getByLabel("Senha", { exact: true }).fill("FixturePass123!");
     await page.getByRole("button", { name: "Entrar", exact: true }).click();
     await page
-      .getByRole("heading", { name: "Explore o catálogo", exact: true })
+      .getByRole("heading", { name: "Descubra lugares", exact: true })
       .waitFor();
     assert.equal(login, 2);
     await context.close();
@@ -255,7 +255,7 @@ const { readEnvironment } = require("../scripts/setup-mobile.cjs");
       .getByRole("button", { name: "Explorar como visitante", exact: true })
       .click();
     await visitor
-      .getByRole("heading", { name: "Explore o catálogo", exact: true })
+      .getByRole("heading", { name: "Descubra lugares", exact: true })
       .waitFor();
     await guest.close();
     assert.deepEqual(errors, []);

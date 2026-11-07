@@ -8,6 +8,8 @@ Aplicativo React Native/Expo existente, ampliado na Fase 2. Continuidade atual: 
 
 **Tela inicial e busca:** interface compacta, filtros de cidade/UF aplicados de uma vez, atualização ao puxar e busca preservada ao abrir o mapa. Após receber os commits pelo GitHub Desktop, reinicie `npm run phone` para testar no iPhone.
 
+**Perfil e cadastro simplificados:** edição de nome, descrição e foto em uma janela; histórico recolhido; cadastro por endereço/pino, sem latitude/longitude. Busca de cidade e pontos de interesse do mapa nativo no Expo Go. A cobertura é a do provedor, sem garantia de todos os comércios.
+
 **Estado atual do banco (06/11/2026):** migrations 001–010 confirmadas no Supabase remoto, postflight estrutural aprovado e consultas públicas respondendo HTTP 200. Catálogo público vazio. Testes reais com duas contas, moderação, fotos e aparelhos continuam pendentes; Sprint 01 permanece aberto. Relatos de schema ausente nas seções históricas descrevem tentativas anteriores.
 
 ## Desenvolvimento
@@ -45,7 +47,7 @@ A migração Safe também coloca conteúdo legado em pendência; nenhuma avalia�
 
 ## Mapas e fotos
 
-Em development builds e na web, MapLibre usa `EXPO_PUBLIC_MAP_STYLE_URL` de provedor licenciado (MapTiler é a opção documentada). Não há tiles OSM públicos nem autocomplete Nominatim. Busca usa catálogo próprio por nome/cidade/UF, com viewport PostGIS e resultados incrementais. Coordenadas podem ser fornecidas manualmente ou selecionadas por pressão prolongada (clique direito na web).
+Em development builds e na web, MapLibre usa `EXPO_PUBLIC_MAP_STYLE_URL` de provedor licenciado (MapTiler é a opção documentada). Não há tiles OSM públicos nem autocomplete Nominatim. Busca usa catálogo próprio por nome/cidade/UF, com viewport PostGIS e resultados incrementais. No cadastro, a localização vem da busca de endereço no celular ou de um toque no mapa; não há campos numéricos de coordenadas. No Expo Go, o mapa também mostra os pontos de interesse disponíveis no provedor nativo (Apple Maps no iPhone), com cobertura conforme a região e o zoom. Esses pontos não são importados automaticamente para o catálogo da comunidade.
 
 Fotos: seleção/câmera opcional, re-encode JPEG e redimensionamento, limite 5 MB, bucket privado de originais e bucket privado de cópias revisadas. Somente mídia aprovada recebe URL assinada para exibição pública. Revogação de acesso a URL já assinada pode levar até 5 minutos; exclusão remove arquivos pelo Storage API.
 

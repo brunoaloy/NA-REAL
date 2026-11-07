@@ -39,9 +39,8 @@ const assert = require("node:assert/strict");
       uploaded = 0,
       placeCreated = false;
     // Use the configured public project's host solely to match the bundled SDK URL.
-    const { readFileSync } = require("node:fs");
-    const env = readFileSync(".env.local", "utf8");
-    const url = env.match(/^EXPO_PUBLIC_SUPABASE_URL=(.+)$/m)?.[1];
+    const { readEnvironment } = require("../scripts/setup-mobile.cjs");
+    const url = readEnvironment(process.cwd()).EXPO_PUBLIC_SUPABASE_URL;
     assert(
       url,
       "This regression test requires a connected build and ignored public .env.local",
@@ -178,7 +177,7 @@ const assert = require("node:assert/strict");
     await context.setGeolocation({ latitude: -8.05, longitude: -34.88 });
     await page.goto(base);
     await page.getByRole("button", { name: "Explorar como visitante" }).click();
-    await page.getByText("Explore o catálogo", { exact: true }).waitFor();
+    await page.getByText("Descubra lugares", { exact: true }).waitFor();
     assert.equal(nearSeen, false);
     await page
       .getByRole("button", { name: "Ordenar por proximidade", exact: true })
@@ -207,15 +206,18 @@ const assert = require("node:assert/strict");
     await page
       .getByRole("textbox", { name: "Endereço público", exact: true })
       .fill("Endereço público de fixture 10");
-    await page
-      .getByRole("button", {
-        name: "Pesquisar possíveis duplicatas",
-        exact: true,
-      })
-      .click();
-    await page
-      .getByText("Nenhum candidato público encontrado.", { exact: false })
-      .waitFor();
+    assert.equal(
+      await page
+        .getByRole("textbox", { name: "Latitude", exact: true })
+        .count(),
+      0,
+    );
+    assert.equal(
+      await page
+        .getByRole("textbox", { name: "Longitude", exact: true })
+        .count(),
+      0,
+    );
     await page
       .getByRole("switch", { name: "Confirmo que é estabelecimento público" })
       .check();

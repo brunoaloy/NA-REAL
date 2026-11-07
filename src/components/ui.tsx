@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { errorMessage } from "../validation/errors";
 import { OfflineBanner } from "./connectivity";
 import { PropsWithChildren } from "react";
@@ -83,19 +84,30 @@ export function PrimaryButton({
       onPress={onPress}
       style={[s.button, disabled && { opacity: 0.5 }]}
     >
-      <Text style={s.buttonText}>{title}</Text>
+      <LinearGradient
+        colors={["#0F766E", "#008677"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={s.buttonFill}
+      >
+        <Text style={s.buttonText}>{title}</Text>
+      </LinearGradient>
     </Pressable>
   );
 }
-export function Field({ label, ...props }: TextInputProps & { label: string }) {
+export function Field({
+  label,
+  style,
+  ...props
+}: TextInputProps & { label: string }) {
   return (
     <View style={{ gap: 6 }}>
-      <Text style={s.copy}>{label}</Text>
+      <Text style={s.fieldLabel}>{label}</Text>
       <TextInput
         accessibilityLabel={label}
         placeholderTextColor={colors.muted}
-        style={s.input}
         {...props}
+        style={[s.input, style]}
       />
     </View>
   );
@@ -119,7 +131,14 @@ export function ErrorState({ error }: { error: unknown }) {
   );
 }
 export const s = StyleSheet.create({
-  screen: { padding: 20, gap: 18, paddingBottom: 40 },
+  screen: {
+    width: "100%",
+    maxWidth: 600,
+    alignSelf: "center",
+    padding: 22,
+    gap: 18,
+    paddingBottom: 40,
+  },
   title: { fontSize: 24, fontFamily: "Inter_700Bold", color: colors.primary },
   copy: {
     fontSize: 15,
@@ -129,27 +148,40 @@ export const s = StyleSheet.create({
   },
   card: {
     padding: 18,
-    borderRadius: 18,
+    borderRadius: 22,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#E3EBE6",
     gap: 10,
   },
   button: {
     backgroundColor: colors.primary,
     borderRadius: 16,
     minHeight: 48,
+    overflow: "hidden",
+    alignItems: "stretch",
+  },
+  buttonFill: {
     padding: 14,
+    minHeight: 50,
     alignItems: "center",
+    justifyContent: "center",
   },
   buttonText: { fontFamily: "Inter_600SemiBold", color: "white", fontSize: 15 },
+  fieldLabel: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 13,
+    color: colors.text,
+  },
   input: {
     backgroundColor: "white",
-    borderColor: "#CBD5E1",
+    borderColor: "#D5E1DA",
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 14,
     color: colors.text,
-    minHeight: 48,
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    minHeight: 50,
   },
 });

@@ -123,6 +123,7 @@ export function PhotoGallery({
         .from("photos")
         .select("id,object_path,owner_id,content_revision")
         .eq("moderation_state", "approved")
+        .order("created_at", { ascending: false })
         .limit(compact ? 1 : 6);
       query = placeId
         ? query.eq("place_id", placeId)

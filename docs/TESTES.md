@@ -54,3 +54,11 @@ O padrão de `SMOKE_URL` deste teste é `http://127.0.0.1:8767`; defina a variá
 `npm run test:onboarding-ui` usa o bundle web com configuração pública do Supabase e o servidor indicado em `SMOKE_URL` (padrão http://127.0.0.1:8768). Todas as respostas Auth/REST são interceptadas: não cria contas nem envia e-mails reais. Cobre as três telas do mockup, recuperação, erros/validações, confirmação de senha, mostrar/ocultar, links legais e navegação após login. Também confere acesso de visitante em 320×568 e ausência de transbordamento horizontal. `UI_SCREENSHOT_DIR` opcional salva capturas fora do Git.
 
 O teste não comprova entrega SMTP, allowlist de redirects PKCE, teclado do iOS nem instalação no Expo Go. Esses fluxos precisam ser conferidos pelo proprietário no aparelho com o servidor local ativo. O app usa as configurações Supabase existentes; esta entrega não altera Auth remoto nem banco.
+
+## Perfil simplificado e cadastro intuitivo
+
+`npm run test:member-ui` usa `SMOKE_URL` (padrão http://127.0.0.1:8769), bundle web com configuração pública e respostas interceptadas. Não cria usuários nem escreve no banco real. Cobre criação de perfil apenas com nome, edição pré-preenchida, @ preservado, prévia de foto sem upload antecipado, salvamento e falha parcial da foto com seleção mantida, proteção da foto anterior, ausência de campos de coordenadas e orientação correta do geocodificador na web. `UI_SCREENSHOT_DIR` opcional grava capturas fora do Git.
+
+Os testes unitários validam perfil com @ opcional, limites dos campos, consulta de endereço, intervalo de pontos aceitos e comportamento do geocodificador nativo com SDK simulado (resultado, falha, permissão Android negada e ausência de suporte web). Esses testes não comprovam cobertura dos comércios reais ou execução do geocodificador do iPhone.
+
+No iPhone com Expo Go: escolher cidade/UF na exploração e abrir o mapa; conferir a centralização e aproximar para ver pontos de interesse; buscar outra cidade e usar GPS; cadastrar por endereço e ajustar o pino sem digitar números; editar nome/descrição e selecionar/cortar foto, salvar e reabrir. Conferir também a mensagem de pendência da foto, envio real ao Storage e aprovação no fluxo de moderação existente. A busca de comércio do provedor não cria automaticamente uma sala/avaliações no NA REAL.
