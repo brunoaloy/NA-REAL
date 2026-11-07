@@ -2,6 +2,8 @@
 
 Aplicativo React Native/Expo existente, ampliado na Fase 2. Continuidade atual: [Sprint 01](docs/ENTREGA_SPRINT_01.md). Não está liberado para produção. Consulte [status e evidências](docs/STATUS.md) e [auditoria de entrada](docs/AUDITORIA_FASE_2.md).
 
+**Expo Go no iPhone (07/11/2026):** após Fetch/Pull de `codex/na-real-dev`, execute `npm ci` e `npm run phone`. O mapa agora usa Apple Maps no Expo Go; não precisa de estilo MapTiler. Veja [guia do iPhone](docs/EXPO_GO_IPHONE.md).
+
 **Estado atual do banco (06/11/2026):** migrations 001–010 confirmadas no Supabase remoto, postflight estrutural aprovado e consultas públicas respondendo HTTP 200. Catálogo público vazio. Testes reais com duas contas, moderação, fotos e aparelhos continuam pendentes; Sprint 01 permanece aberto. Relatos de schema ausente nas seções históricas descrevem tentativas anteriores.
 
 ## Desenvolvimento
@@ -15,7 +17,9 @@ cp .env.example .env.local
 npm start
 ```
 
-Sem backend, a interface informa indisponibilidade e impede sucesso fictício. Não há dados de comunidade simulados. MapLibre requer development build no iOS/Android: não use Expo Go como validação. `npm run web` executa a interface web.
+Para **começar pelo iPhone com Expo Go**, use `npm run phone` e leia o QR com a Câmera do iPhone. O comando força Expo Go e usa túnel ngrok, sem exigir conta Expo, Xcode ou EAS. Mantenha o terminal aberto. No GitHub Desktop, faça Fetch/Pull de `codex/na-real-dev` antes de instalar. Guia: [EXPO_GO_IPHONE](docs/EXPO_GO_IPHONE.md).
+
+Sem backend, a interface informa indisponibilidade e impede sucesso fictício. Não há dados de comunidade simulados. No Expo Go, o mapa usa `react-native-maps` (Apple Maps no iPhone), sem estilo ou chave de mapas adicional. MapLibre permanece nos development builds e na web; nesses runtimes, configure um estilo licenciado. `npm run web` executa a interface web.
 
 Para preparar e executar um development build local:
 
@@ -39,7 +43,7 @@ A migração Safe também coloca conteúdo legado em pendência; nenhuma avalia�
 
 ## Mapas e fotos
 
-MapLibre usa `EXPO_PUBLIC_MAP_STYLE_URL` de provedor licenciado (MapTiler é a opção documentada). Não há tiles OSM públicos nem autocomplete Nominatim. Busca usa catálogo próprio por nome/cidade/UF, com viewport PostGIS e resultados incrementais. Coordenadas podem ser fornecidas manualmente ou selecionadas por pressão prolongada (clique direito na web).
+Em development builds e na web, MapLibre usa `EXPO_PUBLIC_MAP_STYLE_URL` de provedor licenciado (MapTiler é a opção documentada). Não há tiles OSM públicos nem autocomplete Nominatim. Busca usa catálogo próprio por nome/cidade/UF, com viewport PostGIS e resultados incrementais. Coordenadas podem ser fornecidas manualmente ou selecionadas por pressão prolongada (clique direito na web).
 
 Fotos: seleção/câmera opcional, re-encode JPEG e redimensionamento, limite 5 MB, bucket privado de originais e bucket privado de cópias revisadas. Somente mídia aprovada recebe URL assinada para exibição pública. Revogação de acesso a URL já assinada pode levar até 5 minutos; exclusão remove arquivos pelo Storage API.
 

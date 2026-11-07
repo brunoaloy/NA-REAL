@@ -1,0 +1,51 @@
+import { useEffect, useRef } from "react";
+import MapView, { Marker } from "react-native-maps";
+import { regionBounds } from "../validation/map-runtime";
+import type { MapCanvasProps } from "./map-canvas.types";
+export default function ExpoGoMap(p: MapCanvasProps) {
+  const map = useRef<MapView>(null);
+  useEffect(() => {
+    if (p.center) {
+      map.current?.animateToRegion({
+        longitude: p.center[0],
+        latitude: p.center[1],
+        longitudeDelta: 0.05,
+        latitudeDelta: 0.05,
+      });
+    }
+  }, [p.center]);
+  return (
+    <MapView
+      ref={map}
+      accessibilityLabel="Mapa interativo de lugares"
+      style={{ height: 420, width: "100%", borderRadius: 18 }}
+      initialRegion={{
+        longitude: p.center?.[0] ?? -51,
+        latitude: p.center?.[1] ?? -15,
+        longitudeDelta: p.center ? 0.05 : 40,
+        latitudeDelta: p.center ? 0.05 : 39,
+      }}
+      onRegionChangeComplete={(region) => p.onBounds(regionBounds(region))}
+      onLongPress={(event) => {
+        const { longitude, latitude } = event.nativeEvent.coordinate;
+        p.onPick?.(longitude, latitude);
+      }}
+    >
+      {p.places
+        .filter((place) => place.latitude != null && place.longitude != null)
+        .map((place) => (
+          <Marker
+            key={place.id}
+            coordinate={{
+              latitude: place.latitude!,
+              longitude: place.longitude!,
+            }}
+            title={place.name}
+            description={`${place.category} · ${place.city}, ${place.state}`}
+            pinColor="#0F766E"
+            onPress={() => p.onSelect(place.id)}
+          />
+        ))}
+    </MapView>
+  );
+}

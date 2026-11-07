@@ -35,6 +35,17 @@ if (
 )
   throw new Error("Development build profiles missing");
 console.log("PASS development client and iOS simulator profiles");
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+if (!pkg.dependencies["react-native-maps"])
+  throw new Error("Expo Go map dependency missing");
+if (
+  !pkg.scripts.start.includes("--go") ||
+  !pkg.scripts["start:tunnel"].includes("--go")
+)
+  throw new Error("Default mobile commands must target Expo Go");
+if (!pkg.devDependencies["@expo/ngrok"])
+  throw new Error("Expo Go tunnel dependency missing");
+console.log("PASS Expo Go commands, built-in map and local tunnel dependency");
 if (
   config.android.package.startsWith("com.example.") ||
   config.ios.bundleIdentifier.startsWith("com.example.")

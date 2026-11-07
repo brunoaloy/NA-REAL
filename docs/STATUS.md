@@ -96,3 +96,15 @@ Reproduzido com a CLI real em `--agent=no`: `--output json` retorna uma lista di
 Em 06/11/2026 às 19:30 Brasília, após sucesso informado pelo proprietário no Windows, leitura independente do banco confirmou **001–010 aplicadas**, histórico completo, 24 tabelas com RLS e todos os checks estruturais do postflight aprovados. Função padrão rls_auto_enable preservada. Chamadas REST reais de visitante para places/reviews/médias e buscas nacional/proximidade retornaram HTTP 200 com listas vazias. Nenhuma escrita foi feita nesta validação.
 
 O bloqueio anterior de schema remoto vazio foi resolvido. Permanecem pendentes os fluxos reais A/B/moderador, SMTP/PKCE, cadastro/aprovação, avaliações/edição/média/persistência, fotos/Edge Functions, mapa licenciado e aparelhos. Não considerar o Sprint 01 concluído apenas pela estrutura. Evidência detalhada em AUDITORIA_SUPABASE_REMOTO.md e roteiro em TESTES_REMOTOS_SPRINT_01.md.
+
+## Expo Go no iPhone — 07/11/2026
+
+Adaptado o aplicativo existente para iniciar explicitamente no Expo Go, mesmo com expo-dev-client instalado. `npm run phone` inicia um túnel ngrok com dependência local e instruções para a Câmera do iPhone; há alternativas LAN e development client. Guia completo em [EXPO_GO_IPHONE](EXPO_GO_IPHONE.md).
+
+O mapa detecta o runtime: Expo Go carrega react-native-maps, com Apple Maps no iPhone sem estilo/chave de provedor adicional. MapLibre fica isolado e é carregado apenas em development builds; a implementação web permanece a mesma. Seleção por pressão prolongada, marcadores individuais, centralização e bounds para consultas continuam disponíveis. Clusters permanecem somente no MapLibre.
+
+Verificações desta entrega: TypeScript, lint sem avisos, formatação, 28 testes unitários, mobile:check e hashes das dez migrations aprovados. Bundles iOS e web exportados; manifesto de desenvolvimento iOS entregue com HTTP 200 e SDK 58. A regressão Chromium de avaliações, paginação, proximidade, cadastro, fotos e acesso de visitante passou com fixtures interceptadas, sem escrita remota. Não houve instalação no iPhone nem alegação de teste físico.
+
+Bloqueio observado: `npm run phone` nesta nuvem encerrou com timeout de conexão ngrok. Probes HTTPS para api.expo.dev, connect.ngrok-agent.com e tunnel.us.ngrok.com receberam 403 do proxy. Não existe QR público desta nuvem nesta entrega. O proprietário pode gerar o QR no computador após Fetch/Pull e `npm ci`, mantendo o `.env.local` público que já usa no projeto. Nenhum token administrativo entrou no Git e nenhuma alteração foi feita no banco.
+
+Para Auth por link em Expo Go, o callback exp:// do servidor atual precisa ser permitido nas configurações Supabase. Login por senha em conta confirmada independe desse redirect. Moderação/Edge Functions/SMTP, câmera e fluxos entre contas ainda exigem validação integrada; o catálogo público continua vazio.
