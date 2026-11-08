@@ -1,8 +1,23 @@
+import cityLicense from "../data/cities-license.json";
 import { useLocalSearchParams } from "expo-router";
 import { Screen, Title, Copy } from "../components/ui";
 import { AppHeader } from "../components/design";
 export default function Legal() {
   const { kind } = useLocalSearchParams<{ kind: string }>();
+  if (kind === "sources")
+    return (
+      <Screen>
+        <AppHeader title="Fontes e licenças" back />
+        <Title>Índice de cidades</Title>
+        <Copy>
+          Dados de municípios derivados de kelvins/municipios-brasileiros,
+          obtidos em 08/11/2026. Os centros são aproximados e servem para
+          explorar a região; não representam endereços de comércios.
+        </Copy>
+        <Copy>{cityLicense.source}</Copy>
+        <Copy>{cityLicense.license}</Copy>
+      </Screen>
+    );
   return (
     <Screen>
       <AppHeader

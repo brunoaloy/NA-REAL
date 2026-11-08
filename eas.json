@@ -24,9 +24,24 @@
       "ios": {
         "simulator": true
       }
+    },
+    "testflight": {
+      "extends": "production",
+      "distribution": "store",
+      "environment": "preview",
+      "env": {
+        "NA_REAL_REQUIRE_SERVICES": "1",
+        "NA_REAL_REQUIRE_DISTRIBUTION": "1",
+        "EXPO_PUBLIC_NATIVE_MAP_PROVIDER": "builtin"
+      }
     }
   },
   "cli": {
     "appVersionSource": "remote"
+  },
+  "submit": {
+    "testflight": {
+      "ios": {}
+    }
   }
 }

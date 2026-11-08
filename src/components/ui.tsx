@@ -1,7 +1,13 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { errorMessage } from "../validation/errors";
 import { OfflineBanner } from "./connectivity";
-import { PropsWithChildren, type ComponentProps } from "react";
+import {
+  useEffect,
+  useRef,
+  PropsWithChildren,
+  type ComponentProps,
+  type ComponentRef,
+} from "react";
 import { Ionicons } from "@expo/vector-icons";
 import {
   ScrollView,
@@ -31,7 +37,17 @@ export function Screen({
   children,
   onRefresh,
   refreshing = false,
-}: PropsWithChildren<{ onRefresh?: () => void; refreshing?: boolean }>) {
+  scrollKey,
+}: PropsWithChildren<{
+  onRefresh?: () => void;
+  refreshing?: boolean;
+  scrollKey?: string | number;
+}>) {
+  const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
+  useEffect(() => {
+    if (scrollKey !== undefined)
+      scroll.current?.scrollTo({ y: 0, animated: false });
+  }, [scrollKey]);
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <OfflineBanner />
@@ -40,6 +56,7 @@ export function Screen({
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
+          ref={scroll}
           contentContainerStyle={s.screen}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"

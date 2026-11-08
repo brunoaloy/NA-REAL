@@ -74,7 +74,8 @@ const { readEnvironment } = require("../scripts/setup-mobile.cjs");
         url = new URL(request.url()),
         method = request.method();
       let data = [];
-      if (url.pathname === "/auth/v1/user")
+      if (url.pathname === "/rest/v1/rpc/safe_is_admin") data = false;
+      else if (url.pathname === "/auth/v1/user")
         data = { id: uid, aud: "authenticated", role: "authenticated" };
       else if (url.pathname === "/rest/v1/profiles") {
         if (method === "GET") data = profile;
@@ -264,6 +265,7 @@ const { readEnvironment } = require("../scripts/setup-mobile.cjs");
     await page
       .getByRole("textbox", { name: "Nome do lugar", exact: true })
       .fill("Cantinho de teste");
+    await page.getByRole("button", { name: "Continuar", exact: true }).click();
     await page
       .getByRole("textbox", { name: "Cidade", exact: true })
       .fill("Recife");

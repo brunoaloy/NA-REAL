@@ -176,10 +176,12 @@ export function PlaceCard({
   place: p,
   preview = false,
   onClose,
+  onMap,
 }: {
   place: Place;
   preview?: boolean;
   onClose?: () => void;
+  onMap?: () => void;
 }) {
   const open = () =>
     router.push({ pathname: "/place/[id]", params: { id: p.id } });
@@ -271,43 +273,71 @@ export function PlaceCard({
       </View>
     );
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={"Abrir " + p.name}
-      onPress={open}
-      style={({ pressed }) => ({
-        borderRadius: 24,
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-        overflow: "hidden",
-        opacity: pressed ? 0.86 : 1,
-      })}
-    >
-      <PhotoGallery placeId={p.id} compact cover />
-      <View
-        style={{
-          padding: 18,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 12,
-        }}
+    <View style={{ gap: 4 }}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={"Abrir " + p.name}
+        onPress={open}
+        style={({ pressed }) => ({
+          borderRadius: 24,
+          backgroundColor: colors.surface,
+          borderWidth: 1,
+          borderColor: colors.border,
+          overflow: "hidden",
+          opacity: pressed ? 0.86 : 1,
+        })}
       >
-        {info}
+        <PhotoGallery placeId={p.id} compact cover />
         <View
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            backgroundColor: colors.soft,
+            padding: 18,
+            flexDirection: "row",
             alignItems: "center",
-            justifyContent: "center",
+            gap: 12,
           }}
         >
-          <Ionicons name="arrow-forward" size={18} color={colors.primary} />
+          {info}
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: colors.soft,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="arrow-forward" size={18} color={colors.primary} />
+          </View>
         </View>
-      </View>
-    </Pressable>
+      </Pressable>
+      {onMap && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={"Ver " + p.name + " no mapa"}
+          onPress={onMap}
+          style={{
+            minHeight: 44,
+            padding: 10,
+            alignSelf: "flex-end",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 7,
+          }}
+        >
+          <Ionicons name="map-outline" size={16} color={colors.primary} />
+          <Text
+            style={{
+              fontFamily: "Inter_600SemiBold",
+              fontSize: 12,
+              color: colors.primary,
+            }}
+          >
+            Ver no mapa
+          </Text>
+        </Pressable>
+      )}
+    </View>
   );
 }
 export function StatusChip({ state }: { state: string }) {

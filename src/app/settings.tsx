@@ -13,6 +13,7 @@ import {
 } from "../components/ui";
 import { AppHeader } from "../components/design";
 import { useSession } from "../hooks/use-session";
+import { ActionRow } from "../components/member-design";
 import { db } from "../services/supabase";
 export default function Settings() {
   const session = useSession();
@@ -74,6 +75,20 @@ export default function Settings() {
         title="Termos e regras da comunidade"
         onPress={() =>
           router.push({ pathname: "/legal", params: { kind: "terms" } })
+        }
+      />
+      <ActionRow
+        title="Guia dos primeiros testes"
+        detail="Um roteiro simples para experimentar esta versão"
+        icon="compass-outline"
+        onPress={() => router.push("/test-guide")}
+      />
+      <ActionRow
+        title="Fontes e licenças"
+        detail="Sobre os dados locais de cidades"
+        icon="information-circle-outline"
+        onPress={() =>
+          router.push({ pathname: "/legal", params: { kind: "sources" } })
         }
       />
       {session ? (

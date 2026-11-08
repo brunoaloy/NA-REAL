@@ -196,6 +196,7 @@ const assert = require("node:assert/strict");
     await page
       .getByRole("textbox", { name: "Nome do lugar", exact: true })
       .fill("Lugar de fixture");
+    await page.getByRole("button", { name: "Continuar", exact: true }).click();
     await page
       .getByRole("textbox", { name: "Cidade", exact: true })
       .fill("Recife");
@@ -215,11 +216,18 @@ const assert = require("node:assert/strict");
         .count(),
       0,
     );
+    await page.getByRole("button", { name: "Continuar", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Continuar sem foto", exact: true })
+      .click();
     await page
       .getByRole("switch", { name: "Confirmo que é estabelecimento público" })
       .check();
     await page
       .getByRole("button", { name: "Enviar para revisão", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Abrir lugar cadastrado", exact: true })
       .click();
     await page.getByRole("tab", { name: "Geral", exact: true }).waitFor();
     assert(placeCreated);

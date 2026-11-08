@@ -33,7 +33,10 @@ export default function MapCanvas(p: MapCanvasProps) {
     >
       <Camera
         ref={camera}
-        initialViewState={{ center: [-51, -15], zoom: 3 }}
+        initialViewState={{
+          center: p.center ?? [-51, -15],
+          zoom: p.center ? 13 : 3,
+        }}
         {...(p.center ? { center: p.center, zoom: 13 } : {})}
       />
       {p.selectedPoint && (

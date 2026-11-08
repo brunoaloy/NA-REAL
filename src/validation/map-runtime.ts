@@ -1,6 +1,13 @@
 /** Expo Go has react-native-maps, but cannot load MapLibre's custom native module. */
-export function usesExpoGoMap(platform: string, executionEnvironment?: string) {
-  return platform !== "web" && executionEnvironment === "storeClient";
+export function usesExpoGoMap(
+  platform: string,
+  executionEnvironment?: string,
+  preferBuiltIn = false,
+) {
+  return (
+    platform !== "web" &&
+    (executionEnvironment === "storeClient" || preferBuiltIn)
+  );
 }
 export function regionBounds(region: {
   latitude: number;

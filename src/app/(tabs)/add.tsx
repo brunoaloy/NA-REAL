@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
-import { Switch, Text, View } from "react-native";
+import { Switch, Text, View, Image, Keyboard } from "react-native";
+import type { Session } from "@supabase/supabase-js";
 import { useSession } from "../../hooks/use-session";
+import { usePreferredCity } from "../../hooks/use-preferred-city";
 import { db } from "../../services/supabase";
 import {
   Screen,
@@ -11,6 +13,7 @@ import {
   Card,
 } from "../../components/ui";
 import { AppHeader, CategoryChips, PlaceCard } from "../../components/design";
+import { CityFields } from "../../components/city-fields";
 import { PhotoPicker } from "../../components/photos";
 import {
   GentleNote,
@@ -19,6 +22,11 @@ import {
   m,
 } from "../../components/member-design";
 import { addPlace, type Place } from "../../services/catalog";
+import {
+  preparePhoto,
+  uploadPreparedPhoto,
+  type PreparedPhoto,
+} from "../../services/photos";
 import { findAddress } from "../../services/geocoding";
 import {
   addressQuery,
@@ -26,33 +34,46 @@ import {
   type MapPoint,
 } from "../../validation/geocoding";
 import { placeInput } from "../../validation/domain";
+import { validatePlaceStep } from "../../validation/add-journey";
 import {
   mapCenter,
   normalizeFilters,
   emptyFilters,
 } from "../../validation/explore";
+const blank = {
+  name: "",
+  category: "Comer",
+  city: "",
+  state: "",
+  address: "",
+  description: "",
+};
+const steps = ["Lugar", "Endereço", "Foto", "Conferir"];
 export default function Add() {
   const session = useSession();
+  return <AddContent key={session?.user.id ?? "guest"} session={session} />;
+}
+function AddContent({ session }: { session: Session | null }) {
   const params = useLocalSearchParams<{
     latitude?: string;
     longitude?: string;
     locationKey?: string;
   }>();
-  const [form, setForm] = useState({
-    name: "",
-    category: "Comer",
-    city: "",
-    state: "",
-    address: "",
-    description: "",
+  const touched = useRef(false);
+  const [form, setForm] = useState(blank),
+    [step, setStep] = useState(0);
+  const preference = usePreferredCity((value) => {
+    if (value && !touched.current)
+      setForm((current) => ({
+        ...current,
+        city: value.city,
+        state: value.state,
+      }));
   });
-  const centerFromRoute = mapCenter(params);
-  const routePoint = centerFromRoute
-    ? brazilPoint({
-        longitude: centerFromRoute[0],
-        latitude: centerFromRoute[1],
-      })
-    : undefined;
+  const seed = mapCenter(params),
+    routePoint = seed
+      ? brazilPoint({ longitude: seed[0], latitude: seed[1] })
+      : undefined;
   const locationKey = [
     params.latitude,
     params.longitude,
@@ -63,17 +84,20 @@ export default function Add() {
     point?: MapPoint;
   }>();
   const point = pointDraft?.key === locationKey ? pointDraft.point : routePoint;
-  function setPoint(value?: MapPoint) {
+  const setPoint = (value?: MapPoint) =>
     setPointDraft({ key: locationKey, point: value });
-  }
   const [isPublic, setPublic] = useState(false),
     [busy, setBusy] = useState(false),
-    [locating, setLocating] = useState(false);
+    [locating, setLocating] = useState(false),
+    [picking, setPicking] = useState(false);
   const [error, setError] = useState<unknown>(),
-    [created, setCreated] = useState("");
+    [created, setCreated] = useState(""),
+    [photo, setPhoto] = useState<PreparedPhoto | null>(null),
+    [photoSent, setPhotoSent] = useState(false);
   const [duplicates, setDuplicates] = useState<Place[] | null>(null);
   const locked = useRef(false);
   function edit(key: keyof typeof form, value: string) {
+    touched.current = true;
     setForm((current) => ({
       ...current,
       [key]: key === "state" ? value.toUpperCase() : value,
@@ -82,15 +106,33 @@ export default function Add() {
     if (["name", "city", "state"].includes(key)) setDuplicates(null);
     if (["city", "state", "address"].includes(key)) setPoint(undefined);
   }
+  function selectCity(value: { city: string; state: string }) {
+    touched.current = true;
+    setForm((current) => ({
+      ...current,
+      city: value.city,
+      state: value.state,
+    }));
+    setPoint(undefined);
+    setDuplicates(null);
+    setError(undefined);
+  }
+  function next() {
+    try {
+      validatePlaceStep(step, form);
+      Keyboard.dismiss();
+      setStep(step + 1);
+      setError(undefined);
+    } catch (e) {
+      setError(e);
+    }
+  }
   async function locateAddress() {
     if (locating || busy) return;
     setError(undefined);
     try {
       normalizeFilters({ ...emptyFilters, city: form.city, state: form.state });
-      if (form.address.trim().length < 5 || form.city.trim().length < 2)
-        throw new Error(
-          "Preencha o endereço e a cidade para encontrar a entrada.",
-        );
+      validatePlaceStep(1, form);
       setLocating(true);
       setPoint(
         await findAddress(addressQuery(form.address, form.city, form.state)),
@@ -101,14 +143,52 @@ export default function Add() {
       setLocating(false);
     }
   }
+  async function choosePhoto(camera: boolean) {
+    if (picking || busy) return;
+    setPicking(true);
+    setError(undefined);
+    try {
+      const value = await preparePhoto(camera);
+      if (value) setPhoto(value);
+    } catch (e) {
+      setError(e);
+    } finally {
+      setPicking(false);
+    }
+  }
+  async function sendPhoto(id: string) {
+    if (!photo) return;
+    await uploadPreparedPhoto({ placeId: id }, photo);
+    setPhoto(null);
+    setPhotoSent(true);
+  }
+  async function retryPhoto() {
+    if (!created || locked.current) return;
+    locked.current = true;
+    setBusy(true);
+    setError(undefined);
+    try {
+      await sendPhoto(created);
+    } catch {
+      setError(
+        new Error(
+          "O lugar já foi recebido, mas a foto não foi enviada. Você pode tentar novamente sem criar outro cadastro.",
+        ),
+      );
+    } finally {
+      locked.current = false;
+      setBusy(false);
+    }
+  }
   async function submit(allowSimilar = false) {
-    if (locked.current || !session) return;
+    if (locked.current || !session || created) return;
     setError(undefined);
     setBusy(true);
     locked.current = true;
     try {
       const value = placeInput.parse({
         ...form,
+        state: form.state.trim().toUpperCase(),
         is_public_venue: isPublic,
         ...(point ?? {}),
       });
@@ -124,7 +204,16 @@ export default function Add() {
       }
       const id = await addPlace(value);
       setCreated(id);
-      router.push({ pathname: "/place/[id]", params: { id } });
+      if (photo)
+        try {
+          await sendPhoto(id);
+        } catch {
+          setError(
+            new Error(
+              "Seu cadastro foi recebido para análise, mas a foto não foi enviada. Tente reenviar a foto abaixo; não precisa cadastrar o lugar de novo.",
+            ),
+          );
+        }
     } catch (e) {
       setError(e);
     } finally {
@@ -149,194 +238,336 @@ export default function Add() {
     );
   if (created)
     return (
-      <Screen>
+      <Screen scrollKey={created}>
         <AppHeader title="Seu lugar foi enviado" />
         <WarmIntro
           eyebrow="OBRIGADO POR COMPARTILHAR"
           title="Uma descoberta que vai mais longe."
           body="Recebemos o cadastro. Ele passa por uma revisão antes de aparecer para a comunidade."
         />
-        <Card>
-          <Text style={m.section}>Uma foto conta um pouquinho mais</Text>
-          <PhotoPicker placeId={created} />
-        </Card>
+        <GentleNote>
+          Você pode acompanhar a aprovação em Perfil → Lugares que compartilhei.
+          O envio ainda não publica o lugar.
+        </GentleNote>
+        {error != null && <ErrorState error={error} />}
+        {busy && <Text style={m.body}>Enviando sua foto…</Text>}
+        {photo && !busy ? (
+          <Card>
+            <Image
+              source={{ uri: photo.uri }}
+              accessibilityLabel="Foto aguardando reenvio"
+              style={{ height: 180, width: "100%", borderRadius: 16 }}
+            />
+            <QuietButton
+              title="Reenviar somente a foto"
+              onPress={() => void retryPhoto()}
+            />
+          </Card>
+        ) : photoSent ? (
+          <GentleNote>Foto recebida para revisão.</GentleNote>
+        ) : (
+          !busy && (
+            <Card>
+              <Text style={m.section}>Uma foto conta um pouquinho mais</Text>
+              <PhotoPicker placeId={created} />
+            </Card>
+          )
+        )}
+        <PrimaryButton
+          title="Acompanhar aprovação"
+          disabled={busy}
+          onPress={() =>
+            router.push({
+              pathname: "/(tabs)/profile",
+              params: { section: "places", sectionKey: String(Date.now()) },
+            })
+          }
+        />
         <QuietButton
           title="Abrir lugar cadastrado"
+          disabled={busy}
           onPress={() =>
             router.push({ pathname: "/place/[id]", params: { id: created } })
           }
         />
-        <PrimaryButton
+        <QuietButton
           title="Adicionar outro lugar"
+          disabled={busy}
           onPress={() => {
             setCreated("");
-            setForm({
-              name: "",
-              category: "Comer",
-              city: "",
-              state: "",
-              address: "",
-              description: "",
-            });
+            setForm({ ...blank, ...(preference.city ?? {}) });
+            setStep(0);
             setPoint(undefined);
             setPublic(false);
             setDuplicates(null);
             setError(undefined);
+            setPhoto(null);
+            setPhotoSent(false);
           }}
         />
       </Screen>
     );
   return (
-    <Screen>
+    <Screen scrollKey={step}>
       <AppHeader title="Adicionar um lugar" />
-      <WarmIntro
-        eyebrow="COMPARTILHE UMA BOA DESCOBERTA"
-        title="Qual lugar ganhou seu coração?"
-        body="Conte o básico. A gente confere se ele já está por aqui antes de enviar para análise."
-      />
-      <Card>
-        <Field
-          label="Nome do lugar"
-          placeholder="Como ele se chama?"
-          value={form.name}
-          onChangeText={(v) => edit("name", v)}
-          maxLength={120}
-          editable={!busy && !locating}
-        />
-        <Text style={m.label}>O que você encontra por lá?</Text>
-        <CategoryChips
-          includeAll={false}
-          compact
-          value={form.category}
-          onChange={(v) => {
-            if (v !== "Todos" && !busy) edit("category", v);
-          }}
-        />
-        <View style={{ flexDirection: "row", gap: 12 }}>
-          <View style={{ flex: 1 }}>
-            <Field
-              label="Cidade"
-              placeholder="Sua cidade"
-              value={form.city}
-              onChangeText={(v) => edit("city", v)}
-              maxLength={100}
-              editable={!busy && !locating}
-            />
-          </View>
-          <View style={{ width: 78 }}>
-            <Field
-              label="UF"
-              placeholder="MG"
-              value={form.state}
-              onChangeText={(v) => edit("state", v)}
-              autoCapitalize="characters"
-              maxLength={2}
-              editable={!busy && !locating}
-            />
-          </View>
-        </View>
-        <Field
-          label="Endereço público"
-          placeholder="Rua, número e bairro"
-          value={form.address}
-          onChangeText={(v) => edit("address", v)}
-          maxLength={240}
-          editable={!busy && !locating}
-        />
-      </Card>
-      <Card>
-        <Text style={m.section}>Vamos encontrar a entrada?</Text>
-        <Text style={m.body}>
-          {point
-            ? "Endereço marcado. Confira a entrada no mapa e ajuste o pino, se precisar."
-            : "Busque pelo endereço ou toque no mapa para escolher a entrada."}
+      <View
+        accessibilityLabel={`Etapa ${step + 1} de 4: ${steps[step]}`}
+        style={{ gap: 10 }}
+      >
+        <Text style={m.eyebrow}>
+          PASSO {step + 1} DE 4 · {steps[step].toLocaleUpperCase("pt-BR")}
         </Text>
-        <QuietButton
-          title={locating ? "Encontrando endereço…" : "Encontrar pelo endereço"}
-          disabled={busy || locating}
-          onPress={() => void locateAddress()}
-        />
-        <QuietButton
-          title={point ? "Conferir entrada no mapa" : "Marcar entrada no mapa"}
-          disabled={busy || locating}
-          onPress={() =>
-            router.push({
-              pathname: "/map",
-              params: {
-                pick: "1",
-                city: form.city,
-                state: form.state,
-                address: form.address,
-                ...(point
-                  ? {
-                      latitude: String(point.latitude),
-                      longitude: String(point.longitude),
-                    }
-                  : {}),
-              },
-            })
-          }
-        />
-        {!point && (
-          <Text style={m.small}>
-            A marcação é opcional. O endereço continua disponível para quem
-            procurar o lugar.
-          </Text>
-        )}
-      </Card>
-      <Field
-        label="O que torna esse lugar especial? (opcional)"
-        style={{ minHeight: 90, textAlignVertical: "top" }}
-        placeholder="Uma dica, um detalhe, algo que você adora…"
-        value={form.description}
-        onChangeText={(v) => edit("description", v)}
-        multiline
-        maxLength={1000}
-        editable={!busy}
-      />
-      <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
-        <Switch
-          accessibilityLabel="Confirmo que é estabelecimento público"
-          value={isPublic}
-          onValueChange={setPublic}
-          disabled={busy}
-        />
-        <Text style={[m.body, { flex: 1, fontSize: 13, lineHeight: 21 }]}>
-          Este lugar é aberto ao público. Não é uma residência privada.
-        </Text>
-      </View>
-      {duplicates?.length ? (
-        <Card>
-          <Text style={m.section}>Será que já conhecemos esse lugar?</Text>
-          <Text style={m.body}>
-            Encontramos lugares parecidos. Confira antes de criar outro
-            cadastro.
-          </Text>
-          {duplicates.map((item) => (
-            <PlaceCard key={item.id} place={item} />
+        <View style={{ flexDirection: "row", gap: 6 }}>
+          {steps.map((label, i) => (
+            <View
+              key={label}
+              style={{
+                flex: 1,
+                height: 4,
+                borderRadius: 3,
+                backgroundColor: i <= step ? "#0F766E" : "#DFE9E3",
+              }}
+            />
           ))}
-          <QuietButton
-            title="Vou conferir os dados"
-            onPress={() => setDuplicates(null)}
+        </View>
+      </View>
+      <WarmIntro
+        title={
+          [
+            "Qual lugar ganhou seu coração?",
+            "Onde fica esse cantinho?",
+            "Uma foto conta uma história.",
+            "Tudo certo para compartilhar?",
+          ][step]
+        }
+        body={
+          [
+            "Comece pelo nome e pelo que você encontra por lá.",
+            "Informe o endereço. Marcar a entrada no mapa é opcional.",
+            "Se quiser, escolha uma imagem sua. Ela só será enviada com o cadastro.",
+            "Confira os dados antes de enviar para revisão.",
+          ][step]
+        }
+      />
+      {step === 0 && (
+        <Card>
+          <Field
+            label="Nome do lugar"
+            placeholder="Como ele se chama?"
+            value={form.name}
+            onChangeText={(v) => edit("name", v)}
+            maxLength={120}
+          />
+          <Text style={m.label}>O que você encontra por lá?</Text>
+          <CategoryChips
+            compact
+            includeAll={false}
+            value={form.category}
+            onChange={(v) => edit("category", v)}
+          />
+          <Field
+            label="O que torna esse lugar especial? (opcional)"
+            placeholder="Uma dica, um detalhe, algo que você adora…"
+            value={form.description}
+            onChangeText={(v) => edit("description", v)}
+            multiline
+            maxLength={1000}
+            style={{ minHeight: 90, textAlignVertical: "top" }}
           />
         </Card>
-      ) : null}
+      )}
+      {step === 1 && (
+        <>
+          <Card>
+            <CityFields
+              city={form.city}
+              state={form.state}
+              onCity={(v) => edit("city", v)}
+              onState={(v) => edit("state", v)}
+              onSelect={selectCity}
+              disabled={locating}
+            />
+            <Field
+              label="Endereço público"
+              placeholder="Rua, número e bairro"
+              value={form.address}
+              onChangeText={(v) => edit("address", v)}
+              maxLength={240}
+              editable={!locating}
+            />
+          </Card>
+          <Card>
+            <Text style={m.section}>Vamos encontrar a entrada?</Text>
+            <Text style={m.body}>
+              {point
+                ? "Entrada marcada. Confira o pino no mapa, se precisar."
+                : "O endereço já ajuda a encontrar o lugar. Se quiser, marque a entrada exata."}
+            </Text>
+            <QuietButton
+              title={
+                locating ? "Encontrando endereço…" : "Encontrar pelo endereço"
+              }
+              disabled={locating}
+              onPress={() => void locateAddress()}
+            />
+            <QuietButton
+              title={
+                point ? "Conferir entrada no mapa" : "Marcar entrada no mapa"
+              }
+              disabled={locating}
+              onPress={() =>
+                router.push({
+                  pathname: "/map",
+                  params: {
+                    pick: "1",
+                    city: form.city,
+                    state: form.state,
+                    address: form.address,
+                    ...(point
+                      ? {
+                          latitude: String(point.latitude),
+                          longitude: String(point.longitude),
+                        }
+                      : {}),
+                  },
+                })
+              }
+            />
+            {point && (
+              <QuietButton
+                title="Continuar apenas com endereço"
+                onPress={() => setPoint(undefined)}
+              />
+            )}
+          </Card>
+        </>
+      )}
+      {step === 2 && (
+        <Card>
+          {photo ? (
+            <>
+              <Image
+                source={{ uri: photo.uri }}
+                accessibilityLabel="Prévia da foto do lugar"
+                style={{ width: "100%", height: 200, borderRadius: 16 }}
+              />
+              <QuietButton
+                title="Retirar foto"
+                disabled={picking}
+                onPress={() => setPhoto(null)}
+              />
+            </>
+          ) : (
+            <GentleNote>
+              A foto é opcional. Você também pode adicioná-la depois.
+            </GentleNote>
+          )}
+          <QuietButton
+            title="Escolher foto"
+            disabled={picking}
+            onPress={() => void choosePhoto(false)}
+          />
+          <QuietButton
+            title="Tirar foto"
+            disabled={picking}
+            onPress={() => void choosePhoto(true)}
+          />
+          <Text style={m.small}>
+            Use uma foto sua do lugar. Ela passa por revisão antes de aparecer
+            para outras pessoas.
+          </Text>
+        </Card>
+      )}
+      {step === 3 && (
+        <>
+          <Card>
+            <Text style={m.section}>{form.name.trim()}</Text>
+            <Text style={m.body}>
+              {form.category} · {form.city.trim()},{" "}
+              {form.state.trim().toUpperCase()}
+            </Text>
+            <Text style={m.body}>{form.address.trim()}</Text>
+            {form.description.trim() !== "" && (
+              <Text style={m.body}>{form.description.trim()}</Text>
+            )}
+            <Text style={m.small}>
+              {point
+                ? "Entrada marcada no mapa"
+                : "Endereço informado; entrada ainda não marcada"}
+            </Text>
+            {photo && (
+              <Image
+                source={{ uri: photo.uri }}
+                accessibilityLabel="Foto a enviar com o cadastro"
+                style={{ width: "100%", height: 160, borderRadius: 16 }}
+              />
+            )}
+          </Card>
+          <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
+            <Switch
+              accessibilityLabel="Confirmo que é estabelecimento público"
+              value={isPublic}
+              onValueChange={setPublic}
+              disabled={busy}
+            />
+            <Text style={[m.body, { flex: 1 }]}>
+              Este lugar é aberto ao público. Não é uma residência privada.
+            </Text>
+          </View>
+          {duplicates?.length ? (
+            <Card>
+              <Text style={m.section}>Será que já conhecemos esse lugar?</Text>
+              <Text style={m.body}>
+                Encontramos lugares parecidos. Confira antes de criar outro
+                cadastro.
+              </Text>
+              {duplicates.map((item) => (
+                <PlaceCard key={item.id} place={item} />
+              ))}
+              <QuietButton
+                title="Vou conferir os dados"
+                onPress={() => {
+                  setDuplicates(null);
+                  setStep(0);
+                }}
+              />
+            </Card>
+          ) : null}
+        </>
+      )}
       {error != null && <ErrorState error={error} />}
-      <PrimaryButton
-        title={
-          busy
-            ? "Conferindo seu lugar…"
-            : duplicates?.length
-              ? "É outro lugar, enviar para revisão"
-              : "Enviar para revisão"
-        }
-        disabled={busy || locating || !isPublic}
-        onPress={() => void submit(Boolean(duplicates?.length))}
-      />
-      <GentleNote>
-        As boas descobertas ficam melhores quando a gente compartilha. Cadastros
-        e fotos passam por uma revisão antes de aparecer para a comunidade.
-      </GentleNote>
+      {step < 3 ? (
+        <PrimaryButton
+          title={step === 2 && !photo ? "Continuar sem foto" : "Continuar"}
+          disabled={locating || picking}
+          onPress={next}
+        />
+      ) : (
+        <PrimaryButton
+          title={
+            busy
+              ? "Conferindo seu lugar…"
+              : duplicates?.length
+                ? "É outro lugar, enviar para revisão"
+                : "Enviar para revisão"
+          }
+          disabled={busy || !isPublic}
+          onPress={() => void submit(Boolean(duplicates?.length))}
+        />
+      )}
+      {step > 0 && (
+        <QuietButton
+          title="Voltar uma etapa"
+          disabled={busy || locating || picking}
+          onPress={() => {
+            setStep(step - 1);
+            setError(undefined);
+          }}
+        />
+      )}
+      <Text style={m.small}>
+        Cadastros e fotos aparecem para a comunidade após aprovação.
+      </Text>
     </Screen>
   );
 }

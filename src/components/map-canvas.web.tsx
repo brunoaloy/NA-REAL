@@ -22,8 +22,8 @@ export default function MapCanvas(p: MapCanvasProps) {
       m = new maplibregl.Map({
         container: container.current,
         style: p.styleUrl,
-        center: [-51, -15],
-        zoom: 3,
+        center: props.current.center ?? [-51, -15],
+        zoom: props.current.center ? 13 : 3,
         attributionControl: { compact: true },
       });
       map.current = m;

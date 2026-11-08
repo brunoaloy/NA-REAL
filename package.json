@@ -84,7 +84,9 @@
     "test:onboarding-ui": "node tests/onboarding-smoke.cjs",
     "test:member-ui": "node tests/member-ui-smoke.cjs",
     "test:place-ui": "node tests/place-detail-smoke.cjs",
-    "test:design-ui": "node tests/design-smoke.cjs"
+    "test:design-ui": "node tests/design-smoke.cjs",
+    "distribution:check": "node scripts/check-distribution.cjs",
+    "test:pilot-ui": "node tests/pilot-smoke.cjs"
   },
   "private": true
 }

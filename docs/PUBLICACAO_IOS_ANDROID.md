@@ -1,19 +1,11 @@
-# Publicação iOS e Android — bloqueada
+# Distribuição para testes e publicação
 
-`app.json` usa identidade provisória `com.example.nareal`. `eas.json` prepara perfis development, preview e production; não foram produzidos binários, não há projeto EAS vinculado nem submissão.
+O caminho atual é um piloto com poucos **iPhones**, começando pelo Expo Go. O proprietário ainda não tem Apple Developer Program; instalação independente pelo TestFlight depende dessa assinatura. Veja [PILOTO_IPHONE.md](PILOTO_IPHONE.md) para preparação, comandos futuros e pendências reais.
 
-Antes de build/distribuição:
+`eas.json` tem perfis development, preview, production e testflight. Nenhum binário, convite ou submissão foi gerado nesta rodada. O perfil testflight é de loja, usa o ambiente EAS preview, exige Supabase público e identidade/EAS válidos e seleciona o mapa nativo do iPhone. `npm run distribution:check` informa bloqueios sem iniciar um build. IDs provisórios e EAS não vinculado continuam pendentes.
 
-- Definir disponibilidade legal da marca, bundle/package definitivos, domínio, contato e URLs públicas.
-- Criar contas Expo/EAS, Apple Developer e Play Console; configurar assinatura e credenciais sem colocá-las no repositório.
-- Implementar exclusão interna e página externa, política LGPD, termos, denúncia de todo UGC, bloqueio e revisão administrativa.
-- Integrar mapas licenciados com atribuição; não copiar avaliações/fotos do Google, nem presumir licença de dados OSM derivados.
-- Finalizar assets originais, ícones/splash, fotos aprovadas, screenshots, descrição pt-BR, faixa etária, Data Safety e App Privacy.
-- Testar acessibilidade, texto grande, offline, dispositivos Android/iOS e dois usuários reais, incluindo revisão das permissões.
-- Configurar crash reporting sem dados sensíveis e contas para revisão das lojas.
+Para publicar nas lojas, ainda será necessário definir identidade/marca, conta e assinatura Apple/Google quando aplicável, domínio e contatos, documentos legais revisados, formulários de privacidade, assets/screenshots finais, moderação operacional, testes reais de e-mail/RLS/Storage e aparelhos. A exclusão interna/externa de conta, denúncias e bloqueio existem no código; a operação e a configuração remota precisam ser validadas.
 
-Mapas nativos e push requerem development build apropriado. Expo Go não foi validado. Build EAS remoto pode gerar custos e não deve ser iniciado sem autorização do proprietário. Nenhuma publicação foi efetuada.
+No Expo Go do iPhone o mapa é Apple Maps. Development builds e web usam MapLibre por padrão, exigindo estilo/tiles licenciados; o perfil testflight troca para o provedor nativo. Push e OAuth continuam desabilitados. O Android não faz parte do primeiro grupo informado pelo proprietário e precisa de uma rodada própria de configuração/testes antes de distribuição.
 
-## Evidência da Fase 2
-
-Prebuild iOS/Android gerado com MapLibre, localização e seleção de fotos; development client instalado como dependência. `npm run android`/`npm run ios` usam Expo run. Nenhum APK/IPA foi compilado nesta máquina sem SDK Android completo/Xcode. Fluxos de exclusão e documentos agora existem no código, mas exigem teste real e revisão jurídica antes de substituir itens deste checklist por aprovados.
+Não há publicação de produção nesta entrega. Builds EAS e submissões só devem ocorrer quando o proprietário estiver pronto para a etapa de distribuição e suas contas estiverem configuradas.

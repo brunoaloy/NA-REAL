@@ -1,4 +1,5 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
+import { distributionIssues } from "./src/validation/distribution.ts";
 import { clientConfiguration } from "./src/validation/client-config.ts";
 export default function configure({ config }: ConfigContext): ExpoConfig {
   const result = clientConfiguration(
@@ -14,9 +15,40 @@ export default function configure({ config }: ConfigContext): ExpoConfig {
     throw new Error(
       "Build exige URL e chave publicável Supabase configuradas.",
     );
-  return {
+  const resolved: ExpoConfig = {
     ...config,
     name: config.name ?? "NA REAL",
     slug: config.slug ?? "na-real",
+    ios: {
+      ...config.ios,
+      ...(process.env.NA_REAL_IOS_BUNDLE_ID
+        ? { bundleIdentifier: process.env.NA_REAL_IOS_BUNDLE_ID }
+        : {}),
+    },
+    android: {
+      ...config.android,
+      ...(process.env.NA_REAL_ANDROID_PACKAGE
+        ? { package: process.env.NA_REAL_ANDROID_PACKAGE }
+        : {}),
+    },
+    extra: {
+      ...config.extra,
+      ...(process.env.EXPO_PUBLIC_EAS_PROJECT_ID
+        ? {
+            eas: {
+              ...config.extra?.eas,
+              projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
+            },
+          }
+        : {}),
+    },
   };
+  if (process.env.NA_REAL_REQUIRE_DISTRIBUTION === "1") {
+    const issues = distributionIssues(
+      resolved,
+      process.env.EAS_BUILD_PLATFORM || "ios",
+    );
+    if (issues.length) throw new Error(issues.join(" "));
+  }
+  return resolved;
 }

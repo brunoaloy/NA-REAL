@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
@@ -33,6 +33,7 @@ import {
 } from "../../components/member-design";
 import { ProfileAvatar } from "../../components/profile-avatar";
 import { ModerationPhoto } from "../../components/moderation-photo";
+import { useModerator } from "../../hooks/use-moderator";
 import { useSession } from "../../hooks/use-session";
 import { db, supabase } from "../../services/supabase";
 import { loadMyProfile } from "../../services/profile";
@@ -44,19 +45,40 @@ import {
 import { profileInput } from "../../validation/profile";
 export default function Profile() {
   const session = useSession();
+  const params = useLocalSearchParams<{
+    section?: string;
+    sectionKey?: string;
+  }>();
   return (
-    <ProfileContent key={session?.user.id ?? "visitor"} session={session} />
+    <ProfileContent
+      key={[
+        session?.user.id ?? "visitor",
+        params.section,
+        params.sectionKey,
+      ].join(":")}
+      session={session}
+      initialSection={params.section}
+    />
   );
 }
-function ProfileContent({ session }: { session: Session | null }) {
+function ProfileContent({
+  session,
+  initialSection,
+}: {
+  session: Session | null;
+  initialSection?: string;
+}) {
   const qc = useQueryClient();
+  const moderator = useModerator(session?.user.id);
   const [editing, setEditing] = useState(false),
     [advanced, setAdvanced] = useState(false);
   const [name, setName] = useState(""),
     [handle, setHandle] = useState(""),
     [bio, setBio] = useState("");
   const [photo, setPhoto] = useState<PreparedPhoto | null>(null);
-  const [section, setSection] = useState<string | null>(null),
+  const [section, setSection] = useState<string | null>(
+      initialSection === "places" ? "places" : null,
+    ),
     [reason, setReason] = useState("");
   const [error, setError] = useState<unknown>(),
     [editError, setEditError] = useState<unknown>();
@@ -206,6 +228,7 @@ function ProfileContent({ session }: { session: Session | null }) {
       setBusy(false);
     }
   }
+
   const toggle = (value: string) =>
     setSection(section === value ? null : value);
   return (
@@ -500,6 +523,14 @@ function ProfileContent({ session }: { session: Session | null }) {
             </View>
           </View>
         </>
+      )}
+      {moderator.data === true && (
+        <ActionRow
+          title="Moderação da comunidade"
+          detail="Revisar lugares e contribuições pendentes"
+          icon="shield-checkmark-outline"
+          onPress={() => router.push("/admin")}
+        />
       )}
       <ActionRow
         title="Privacidade e configurações"

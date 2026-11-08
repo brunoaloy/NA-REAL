@@ -10,6 +10,7 @@ import {
   type MapPoint,
 } from "../validation/geocoding";
 import { mapFilters, mapCenter } from "../validation/explore";
+import { cityCenter } from "../services/cities";
 import { regionBounds } from "../validation/map-runtime";
 import {
   Screen,
@@ -38,6 +39,7 @@ import { configured } from "../services/supabase";
 export default function MapPage() {
   const params = useLocalSearchParams<{
     pick?: string;
+    placeId?: string;
     search?: string;
     category?: string;
     city?: string;
@@ -48,7 +50,9 @@ export default function MapPage() {
   }>();
   const initial = mapFilters(params),
     pick = params.pick === "1";
-  const seed = mapCenter(params);
+  const seed =
+    mapCenter(params) ??
+    (!pick ? cityCenter(initial.city, initial.state) : undefined);
   const [bounds, setBounds] = useState<Bounds>(BRAZIL);
   const [input, setInput] = useState(initial.search),
     [search, setSearch] = useState(initial.search),
@@ -66,7 +70,9 @@ export default function MapPage() {
   const [chosen, setChosen] = useState<MapPoint | undefined>(
     seed ? brazilPoint({ longitude: seed[0], latitude: seed[1] }) : undefined,
   );
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useState(
+    typeof params.placeId === "string" ? params.placeId : "",
+  );
   const [locating, setLocating] = useState(false),
     [error, setError] = useState<unknown>();
   const [showSearch, setShowSearch] = useState(Boolean(initial.search));

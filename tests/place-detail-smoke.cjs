@@ -71,7 +71,8 @@ const { readEnvironment } = require("../scripts/setup-mobile.cjs");
         method = request.method(),
         owner = request.headers().authorization === `Bearer ${jwt}`;
       let data = [];
-      if (u.pathname === "/auth/v1/user") data = user;
+      if (u.pathname === "/rest/v1/rpc/safe_is_admin") data = false;
+      else if (u.pathname === "/auth/v1/user") data = user;
       else if (u.pathname === "/auth/v1/token") data = auth;
       else if (u.pathname === "/rest/v1/rpc/search_places") data = [place];
       else if (u.pathname === "/rest/v1/places") {

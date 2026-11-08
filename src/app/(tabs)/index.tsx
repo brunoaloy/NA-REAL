@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import {
@@ -12,7 +12,6 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   Screen,
   Copy,
-  Field,
   PrimaryButton,
   EmptyState,
   ErrorState,
@@ -27,6 +26,9 @@ import {
   DiscoveryHero,
 } from "../../components/design";
 import { QuietButton, m } from "../../components/member-design";
+import { CityFields } from "../../components/city-fields";
+import { usePreferredCity } from "../../hooks/use-preferred-city";
+import { cityCenter } from "../../services/cities";
 import { nearbyPlaces, places } from "../../services/catalog";
 import { requestPosition } from "../../services/location";
 import { configured } from "../../services/supabase";
@@ -42,7 +44,15 @@ export default function Explore() {
   } | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<unknown>();
+  const touched = useRef(false);
   const [filters, setFilters] = useState(emptyFilters);
+  const preference = usePreferredCity((value) => {
+    if (!touched.current && value) setFilters({ ...emptyFilters, ...value });
+  });
+  function updateFilters(value: typeof filters) {
+    touched.current = true;
+    setFilters(value);
+  }
   const [input, setInput] = useState("");
   const [draftCity, setDraftCity] = useState("");
   const [draftState, setDraftState] = useState("");
@@ -59,7 +69,7 @@ export default function Explore() {
     initialPageParam: 0,
     getNextPageParam: (last, pages) =>
       last.length === 50 ? pages.length : undefined,
-    enabled: configured,
+    enabled: configured && preference.ready,
   });
   const items = q.data?.pages.flat() ?? [];
   async function toggleNearby() {
@@ -83,10 +93,11 @@ export default function Explore() {
     const next = normalizeFilters({ ...filters, search: value });
     setInput(next.search);
     if (next.search === search && configured) void q.refetch();
-    else setFilters(next);
+    else updateFilters(next);
   }
   function clearFilters() {
-    setFilters(emptyFilters);
+    updateFilters(emptyFilters);
+    void preference.save(null);
     setInput("");
     setDraftCity("");
     setDraftState("");
@@ -98,8 +109,14 @@ export default function Explore() {
   }
   function applyFilters() {
     try {
-      setFilters(
-        normalizeFilters({ ...filters, city: draftCity, state: draftState }),
+      const next = normalizeFilters({
+        ...filters,
+        city: draftCity,
+        state: draftState,
+      });
+      updateFilters(next);
+      void preference.save(
+        next.city && next.state ? { city: next.city, state: next.state } : null,
       );
       setFilterError(undefined);
       setAdvanced(false);
@@ -117,10 +134,17 @@ export default function Explore() {
     setAdvanced(!advanced);
   }
   function openMap() {
+    const center = cityCenter(city, state);
     router.push({
       pathname: "/map",
       params: {
         ...filters,
+        ...(center
+          ? {
+              latitude: String(center[1]),
+              longitude: String(center[0]),
+            }
+          : {}),
         ...(position
           ? {
               latitude: String(position.latitude),
@@ -236,27 +260,16 @@ export default function Explore() {
           >
             Onde vamos explorar?
           </Text>
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <View style={{ flex: 1 }}>
-              <Field
-                label="Cidade"
-                value={draftCity}
-                onChangeText={setDraftCity}
-                maxLength={100}
-                placeholder="Ex.: Belo Horizonte"
-              />
-            </View>
-            <View style={{ width: 80 }}>
-              <Field
-                label="UF"
-                value={draftState}
-                onChangeText={(v) => setDraftState(v.toUpperCase())}
-                autoCapitalize="characters"
-                maxLength={2}
-                placeholder="MG"
-              />
-            </View>
-          </View>
+          <CityFields
+            city={draftCity}
+            state={draftState}
+            onCity={setDraftCity}
+            onState={setDraftState}
+            onSelect={(value) => {
+              setDraftCity(value.city);
+              setDraftState(value.state);
+            }}
+          />
           {filterError != null && <ErrorState error={filterError} />}
           <PrimaryButton title="Aplicar filtros" onPress={applyFilters} />
           <Pressable
@@ -272,11 +285,14 @@ export default function Explore() {
           </Pressable>
         </Card>
       )}
+      {preference.error !== "" && (
+        <Text style={m.small}>{preference.error}</Text>
+      )}
       {locationError != null && <ErrorState error={locationError} />}
       <CategoryChips
         compact
         value={category}
-        onChange={(value) => setFilters({ ...filters, category: value })}
+        onChange={(value) => updateFilters({ ...filters, category: value })}
       />
       {filtered && (
         <View
@@ -503,7 +519,25 @@ export default function Explore() {
             </View>
           )}
           {items.map((p) => (
-            <PlaceCard key={p.id} place={p} />
+            <PlaceCard
+              key={p.id}
+              place={p}
+              onMap={
+                p.latitude != null && p.longitude != null
+                  ? () =>
+                      router.push({
+                        pathname: "/map",
+                        params: {
+                          placeId: p.id,
+                          latitude: String(p.latitude),
+                          longitude: String(p.longitude),
+                          city: p.city,
+                          state: p.state,
+                        },
+                      })
+                  : undefined
+              }
+            />
           ))}
           {q.hasNextPage && (
             <QuietButton

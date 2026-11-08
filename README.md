@@ -14,6 +14,8 @@ Aplicativo React Native/Expo existente, ampliado na Fase 2. Continuidade atual: 
 
 **Detalhes dos lugares:** galeria ampliável, rota, favoritos e avaliações simplificados; seus cadastros pendentes podem ser abertos pelo perfil. Veja o [roteiro de validação no iPhone](docs/VALIDACAO_VISITA_IPHONE.md).
 
+**Próximo piloto no iPhone:** cidades sugeridas e lembradas, cadastro guiado com foto opcional, acompanhamento de aprovação e guia de tarefas no app. [Preparação do piloto e TestFlight](docs/PILOTO_IPHONE.md). Moderação e limpeza dos cadastros de demonstração ainda exigem escrita autorizada no Supabase; os SQLs operacionais estão em `scripts/pilot`.
+
 ## Desenvolvimento
 
 Node 24 e npm 11:

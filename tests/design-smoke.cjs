@@ -44,7 +44,7 @@ const { readEnvironment } = require("../scripts/setup-mobile.cjs");
     const jpeg = await fixture.screenshot({ type: "jpeg" });
     await fixture.close();
     await context.routeWebSocket(`wss://${host}/**`, (s) => s.close());
-    await context.route("**/design-map-style.json", (r) =>
+    await context.route("**/*map-style.json", (r) =>
       r.fulfill({
         json: {
           version: 8,
