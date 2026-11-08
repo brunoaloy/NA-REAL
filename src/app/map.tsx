@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Keyboard, Linking, Platform, Text } from "react-native";
+import { Keyboard, Linking, Platform, Text, View } from "react-native";
 import { requestPosition } from "../services/location";
 import { findAddress } from "../services/geocoding";
 import {
@@ -29,6 +29,7 @@ import {
   GentleNote,
   QuietButton,
   m,
+  ActionRow,
 } from "../components/member-design";
 import MapCanvas from "../components/map-canvas";
 import { builtInMap } from "../services/map-runtime";
@@ -97,7 +98,9 @@ export default function MapPage() {
       last.length === 50 && pages.length < 10 ? pages.length : undefined,
   });
   const items = q.data?.pages.flat() ?? [];
+  const selectedPlace = items.find((place) => place.id === selected);
   function move(point: MapPoint) {
+    setSelected("");
     setCenter([point.longitude, point.latitude]);
     setBounds(
       regionBounds({ ...point, latitudeDelta: 0.05, longitudeDelta: 0.05 }),
@@ -189,14 +192,16 @@ export default function MapPage() {
         title={pick ? "Marque a entrada" : "Sua cidade no mapa"}
         back
       />
-      <WarmIntro
-        title={pick ? "É bem aqui?" : "Por onde vamos passear?"}
-        body={
-          pick
-            ? "Encontre o endereço e toque no mapa para marcar a entrada do lugar."
-            : "Encontre uma cidade e aproxime o mapa para descobrir o que tem por perto."
-        }
-      />
+      {pick ? (
+        <WarmIntro
+          title="É bem aqui?"
+          body="Encontre o endereço e toque no mapa para marcar a entrada do lugar."
+        />
+      ) : (
+        <Text style={m.body}>
+          Encontre sua cidade. Descubra o que tem por perto.
+        </Text>
+      )}
       <SearchBar
         label="Buscar cidade ou endereço"
         placeholder="Ex.: Recife, PE"
@@ -218,17 +223,69 @@ export default function MapPage() {
       />
       {error != null && <ErrorState error={error} />}
       {mapAvailable ? (
-        <MapCanvas
-          styleUrl={style ?? ""}
-          places={items}
-          center={center}
-          selectedPoint={pick ? chosen : undefined}
-          onBounds={(b) =>
-            setBounds(b.map((v) => Math.round(v * 10000) / 10000) as Bounds)
-          }
-          onSelect={setSelected}
-          onPick={pick ? choose : undefined}
-        />
+        <View
+          style={{
+            borderRadius: 24,
+            overflow: "hidden",
+            borderWidth: 1,
+            borderColor: "#DFE9E3",
+            backgroundColor: "#FFFFFF",
+          }}
+        >
+          <MapCanvas
+            styleUrl={style ?? ""}
+            places={items}
+            center={center}
+            selectedPoint={pick ? chosen : undefined}
+            onBounds={(b) =>
+              setBounds(b.map((v) => Math.round(v * 10000) / 10000) as Bounds)
+            }
+            onSelect={setSelected}
+            selectedId={selectedPlace?.id}
+            onPick={pick ? choose : undefined}
+          />
+          {!pick &&
+            (selectedPlace ? (
+              <View
+                style={{
+                  position: "absolute",
+                  left: 10,
+                  right: 10,
+                  bottom: 34,
+                  borderRadius: 20,
+                  overflow: "hidden",
+                  borderWidth: 1,
+                  borderColor: "#D5E5DA",
+                  elevation: 4,
+                }}
+              >
+                <PlaceCard
+                  place={selectedPlace}
+                  preview
+                  onClose={() => setSelected("")}
+                />
+              </View>
+            ) : (
+              <View
+                style={{
+                  position: "absolute",
+                  left: 10,
+                  right: 54,
+                  top: 12,
+                  backgroundColor: "#FFFFFF",
+                  borderRadius: 14,
+                  padding: 12,
+                  flexDirection: "row",
+                  gap: 10,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={[m.small, { color: "#0F766E", flex: 1 }]}>
+                  Toque em um pin verde para conhecer um lugar da comunidade.
+                </Text>
+              </View>
+            ))}
+        </View>
       ) : (
         <EmptyState text="O mapa não está disponível nesta versão. Você pode continuar pela lista ou abrir o aplicativo Mapas." />
       )}
@@ -257,13 +314,16 @@ export default function MapPage() {
         </>
       ) : (
         <>
-          {builtInMap && (
-            <GentleNote>
-              Lojas, cafés e outros pontos do mapa aparecem conforme você
-              aproxima. A cobertura depende do provedor; os pins verdes são da
-              comunidade NA REAL.
-            </GentleNote>
-          )}
+          <View style={{ gap: 9, paddingHorizontal: 4 }}>
+            <Text style={[m.label, { fontSize: 12, color: "#0F766E" }]}>
+              ● Pins verdes · Comunidade NA REAL
+            </Text>
+            <Text style={m.small}>
+              {builtInMap
+                ? "Os outros comércios e pontos são do mapa do seu celular. Aproxime para explorar; a cobertura varia por região."
+                : "As ruas e os pontos do mapa são do provedor. As descobertas da comunidade aparecem nos pins verdes."}
+            </Text>
+          </View>
           <QuietButton
             title="Abrir busca no aplicativo Mapas"
             onPress={() => void openMaps()}
@@ -278,12 +338,15 @@ export default function MapPage() {
           <Text style={m.small}>
             Experiências e dicas de quem conhece cada lugar.
           </Text>
-          <QuietButton
+          <ActionRow
             title={
               showSearch
                 ? "Recolher busca da comunidade"
                 : "Buscar na comunidade"
             }
+            detail="Filtre os pins por nome ou categoria"
+            icon="search-outline"
+            expanded={showSearch}
             onPress={() => setShowSearch(!showSearch)}
           />
           {showSearch && (
@@ -314,13 +377,10 @@ export default function MapPage() {
           )}
           {q.isFetching && <Copy>Buscando descobertas da comunidade…</Copy>}
           {mapAvailable && q.data && items.length === 0 && (
-            <EmptyState text="Ainda não há lugares da comunidade nesta área. Os comércios do mapa continuam disponíveis conforme a cobertura do provedor." />
-          )}
-          {items.find((p) => p.id === selected) && (
-            <PlaceCard place={items.find((p) => p.id === selected)!} />
+            <EmptyState text="Esta região ainda tem histórias para descobrir. Compartilhe um lugar que você conhece; os outros comércios do mapa aparecem conforme a cobertura do provedor." />
           )}
           {q.hasNextPage && (
-            <PrimaryButton
+            <QuietButton
               title="Carregar mais nesta área"
               disabled={q.isFetchingNextPage}
               onPress={() => void q.fetchNextPage()}

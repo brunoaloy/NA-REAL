@@ -26,6 +26,7 @@ import {
   SearchBar,
   DiscoveryHero,
 } from "../../components/design";
+import { QuietButton, m } from "../../components/member-design";
 import { nearbyPlaces, places } from "../../services/catalog";
 import { requestPosition } from "../../services/location";
 import { configured } from "../../services/supabase";
@@ -107,6 +108,14 @@ export default function Explore() {
       setFilterError(e);
     }
   }
+  function openFilters() {
+    if (!advanced) {
+      setDraftCity(city);
+      setDraftState(state);
+      setFilterError(undefined);
+    }
+    setAdvanced(!advanced);
+  }
   function openMap() {
     router.push({
       pathname: "/map",
@@ -127,6 +136,7 @@ export default function Explore() {
       refreshing={q.isRefetching && !q.isFetchingNextPage}
     >
       <AppHeader />
+      <DiscoveryHero city={city} state={state} onChooseCity={openFilters} />
       <SearchBar value={input} onChange={setInput} onSearch={submitSearch} />
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
         <Pressable
@@ -148,7 +158,7 @@ export default function Explore() {
             flex: 1,
             flexDirection: "row",
             alignItems: "center",
-            gap: 8,
+            gap: 6,
             padding: 12,
             borderRadius: 15,
             backgroundColor: position ? "#D1FAE5" : "#F1F5F4",
@@ -183,22 +193,19 @@ export default function Explore() {
           accessibilityRole="button"
           accessibilityLabel="Filtros avançados"
           accessibilityState={{ expanded: advanced }}
-          onPress={() => {
-            if (!advanced) {
-              setDraftCity(city);
-              setDraftState(state);
-              setFilterError(undefined);
-            }
-            setAdvanced(!advanced);
-          }}
+          onPress={openFilters}
           style={{
             padding: 12,
             borderRadius: 15,
             backgroundColor: advanced || city || state ? "#D1FAE5" : "#F1F5F4",
             minHeight: 46,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
           }}
         >
-          <Ionicons name="options-outline" size={22} color={colors.primary} />
+          <Ionicons name="options-outline" size={18} color={colors.primary} />
+          <Text style={[m.small, { color: colors.primary }]}>Filtros</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -209,9 +216,13 @@ export default function Explore() {
             borderRadius: 15,
             backgroundColor: "#F1F5F4",
             minHeight: 46,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
           }}
         >
-          <Ionicons name="map-outline" size={22} color={colors.primary} />
+          <Ionicons name="map-outline" size={18} color={colors.primary} />
+          <Text style={[m.small, { color: colors.primary }]}>Mapa</Text>
         </Pressable>
       </View>
       {advanced && (
@@ -267,7 +278,6 @@ export default function Explore() {
         value={category}
         onChange={(value) => setFilters({ ...filters, category: value })}
       />
-      {!filtered && !position && <DiscoveryHero />}
       {filtered && (
         <View
           style={{
@@ -334,7 +344,11 @@ export default function Explore() {
             flex: 1,
           }}
         >
-          {filtered ? "Resultados da busca" : "Descubra lugares"}
+          {filtered
+            ? "Resultados da busca"
+            : position
+              ? "Descobertas por perto"
+              : "Lugares para conhecer"}
         </Text>
         <Pressable
           accessibilityRole="button"
@@ -348,21 +362,6 @@ export default function Explore() {
           ) : (
             <Ionicons name="refresh-outline" size={20} color={colors.primary} />
           )}
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          onPress={openMap}
-          style={{ paddingVertical: 8 }}
-        >
-          <Text
-            style={{
-              color: colors.primary,
-              fontFamily: "Inter_600SemiBold",
-              fontSize: 12,
-            }}
-          >
-            Ver mapa
-          </Text>
         </Pressable>
       </View>
       {position && (
@@ -379,7 +378,7 @@ export default function Explore() {
         </Text>
       )}
       {!configured ? (
-        <EmptyState text="Supabase não configurado. Conecte seu projeto para consultar lugares reais." />
+        <EmptyState text="As descobertas estão indisponíveis por enquanto. Reinicie o aplicativo para tentar conectar novamente." />
       ) : q.isPending ? (
         <View
           accessibilityLiveRegion="polite"
@@ -403,8 +402,9 @@ export default function Explore() {
               style={{
                 borderRadius: 22,
                 borderWidth: 1,
-                borderColor: "#DFE9E4",
-                padding: 20,
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
+                padding: 24,
                 gap: 12,
                 alignItems: "center",
               }}
@@ -456,8 +456,8 @@ export default function Explore() {
                 {filtered
                   ? "Tente outro nome, amplie a região ou limpe os filtros para explorar de novo."
                   : position
-                    ? "Ainda não há lugares aprovados com coordenadas nesta busca. Você pode voltar à lista nacional ou cadastrar um local."
-                    : "Compartilhe um lugar que você conhece e ajude nossa comunidade a crescer."}
+                    ? "Ainda não encontramos descobertas da comunidade por perto. Explore outras regiões ou compartilhe um lugar que você conhece."
+                    : "Ainda estamos descobrindo esta cidade. Compartilhe um lugar que você conhece e ajude a contar essa história."}
               </Text>
               {filtered && (
                 <Pressable
@@ -477,7 +477,7 @@ export default function Explore() {
               )}
               {!filtered && !position && (
                 <View style={{ alignSelf: "stretch" }}>
-                  <PrimaryButton
+                  <QuietButton
                     title="Explorar comércios no mapa"
                     onPress={openMap}
                   />
@@ -506,7 +506,7 @@ export default function Explore() {
             <PlaceCard key={p.id} place={p} />
           ))}
           {q.hasNextPage && (
-            <PrimaryButton
+            <QuietButton
               title={q.isFetchingNextPage ? "Carregando…" : "Carregar mais"}
               disabled={q.isFetchingNextPage}
               onPress={() => void q.fetchNextPage()}

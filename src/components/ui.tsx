@@ -1,7 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { errorMessage } from "../validation/errors";
 import { OfflineBanner } from "./connectivity";
-import { PropsWithChildren } from "react";
+import { PropsWithChildren, type ComponentProps } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {
   ScrollView,
   KeyboardAvoidingView,
@@ -18,7 +19,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export const colors = {
   primary: "#0F766E",
   accent: "#10B981",
-  background: "#FFFFFF",
+  background: "#F7FAF8",
+  surface: "#FFFFFF",
+  soft: "#E8F3ED",
+  border: "#DFE9E3",
+  ink: "#153E36",
   text: "#1F2937",
   muted: "#64748B",
 };
@@ -113,13 +118,55 @@ export function Field({
   );
 }
 export function EmptyState({
-  text = "Nenhuma contribuição ainda.",
+  text = "Sua próxima descoberta começa por aqui.",
+  icon = "compass-outline",
+  action,
 }: {
   text?: string;
+  icon?: ComponentProps<typeof Ionicons>["name"];
+  action?: { title: string; onPress: () => void };
 }) {
   return (
     <Card>
-      <Copy>{text}</Copy>
+      <View style={{ gap: 14, alignItems: "center", paddingVertical: 9 }}>
+        <View
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 18,
+            backgroundColor: colors.soft,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name={icon} size={24} color={colors.primary} />
+        </View>
+        <Text
+          style={[
+            s.copy,
+            { color: colors.muted, textAlign: "center", fontSize: 14 },
+          ]}
+        >
+          {text}
+        </Text>
+        {action && (
+          <Pressable
+            accessibilityRole="button"
+            onPress={action.onPress}
+            style={{ padding: 12, minHeight: 44 }}
+          >
+            <Text
+              style={{
+                fontFamily: "Inter_600SemiBold",
+                color: colors.primary,
+                fontSize: 13,
+              }}
+            >
+              {action.title}
+            </Text>
+          </Pressable>
+        )}
+      </View>
     </Card>
   );
 }

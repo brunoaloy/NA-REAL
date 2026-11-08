@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db } from "../services/supabase";
 import { userId } from "../services/catalog";
-import { Card, Copy, PrimaryButton, ErrorState, EmptyState } from "./ui";
+import { QuietButton } from "./member-design";
+import { Card, Copy, ErrorState, EmptyState } from "./ui";
 import { StatusChip } from "./design";
 import { ContentActions } from "./content-actions";
 const values = [
@@ -80,7 +81,7 @@ export function LiveReports({ placeId }: { placeId: string }) {
           comprovam a situação universal do lugar.
         </Copy>
         {values.map(([value, label]) => (
-          <PrimaryButton
+          <QuietButton
             key={value}
             title={label}
             disabled={busy}
@@ -95,7 +96,10 @@ export function LiveReports({ placeId }: { placeId: string }) {
       ) : q.isPending ? (
         <Copy>Carregando relatos…</Copy>
       ) : reports.length === 0 ? (
-        <EmptyState text="Sem informações recentes." />
+        <EmptyState
+          icon="chatbubbles-outline"
+          text="Como está por aí? Sua atualização pode ajudar quem está a caminho."
+        />
       ) : (
         reports.map((v) => (
           <Card key={v.id}>
@@ -114,11 +118,11 @@ export function LiveReports({ placeId }: { placeId: string }) {
               {v.report_confirmations.filter((c) => !c.agrees).length}{" "}
               contestações
             </Copy>
-            <PrimaryButton
+            <QuietButton
               title="Confirmar relato"
               onPress={() => void confirm(v.id, true)}
             />
-            <PrimaryButton
+            <QuietButton
               title="Contestar relato"
               onPress={() => void confirm(v.id, false)}
             />

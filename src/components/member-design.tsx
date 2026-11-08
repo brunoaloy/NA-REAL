@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { PropsWithChildren, ComponentProps } from "react";
 import { colors } from "./ui";
@@ -94,9 +93,34 @@ export function GentleNote({ children }: PropsWithChildren) {
 }
 export function ProfileCover({ children }: PropsWithChildren) {
   return (
-    <LinearGradient colors={["#EDF8F1", "#F8FCFA"]} style={m.cover}>
+    <View style={m.cover}>
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          top: -88,
+          right: -68,
+          width: 245,
+          height: 245,
+          borderRadius: 130,
+          borderWidth: 36,
+          borderColor: "#E8F3EB",
+        }}
+      />
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          left: -72,
+          top: -97,
+          width: 210,
+          height: 210,
+          borderRadius: 110,
+          backgroundColor: "#EDF5EF",
+        }}
+      />
       {children}
-    </LinearGradient>
+    </View>
   );
 }
 export const m = StyleSheet.create({
@@ -174,7 +198,9 @@ export const m = StyleSheet.create({
     gap: 13,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E0EEE4",
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    overflow: "hidden",
   },
   section: { fontFamily: "Inter_700Bold", fontSize: 18, color: colors.text },
 });

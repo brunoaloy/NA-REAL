@@ -239,7 +239,7 @@ function ProfileContent({ session }: { session: Session | null }) {
             </>
           )}
           <ProfileCover>
-            <Text style={m.eyebrow}>QUE BOM TER VOCÊ POR AQUI</Text>
+            <Text style={m.eyebrow}>SEU CANTINHO NO NA REAL</Text>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Alterar foto de perfil"
@@ -306,165 +306,198 @@ function ProfileContent({ session }: { session: Session | null }) {
               />
             </Card>
           )}
-          <View>
-            <ActionRow
-              title="Lugares favoritos"
-              detail="Para voltar sempre que der vontade"
-              icon="heart-outline"
-              expanded={section === "favorites"}
-              onPress={() => toggle("favorites")}
-            />
-            {section === "favorites" && (
-              <View style={{ gap: 12, paddingVertical: 14 }}>
-                {q.data?.favorites.length === 0 && (
-                  <EmptyState text="Salve um lugar no coração e ele aparece aqui." />
-                )}
-                {q.data?.favorites.map((f) => (
-                  <Card key={f.place_id}>
-                    <Text style={m.label}>
-                      {f.places?.name ?? "Lugar indisponível"}
-                    </Text>
-                    {f.places && (
+          <View style={{ gap: 4 }}>
+            <Text
+              accessibilityRole="header"
+              style={[m.section, { marginTop: 4, marginBottom: 3 }]}
+            >
+              Suas descobertas
+            </Text>
+            <Text style={[m.small, { marginBottom: 8 }]}>
+              Guarde os lugares. Compartilhe as histórias.
+            </Text>
+            <View
+              style={{
+                backgroundColor: "#FFFFFF",
+                borderRadius: 22,
+                paddingHorizontal: 16,
+                borderWidth: 1,
+                borderColor: "#DFE9E3",
+              }}
+            >
+              <ActionRow
+                title="Lugares favoritos"
+                detail="Para voltar sempre que der vontade"
+                icon="heart-outline"
+                expanded={section === "favorites"}
+                onPress={() => toggle("favorites")}
+              />
+              {section === "favorites" && (
+                <View style={{ gap: 12, paddingVertical: 14 }}>
+                  {q.data?.favorites.length === 0 && (
+                    <EmptyState
+                      icon="heart-outline"
+                      text="Salve um lugar no coração e ele aparece aqui."
+                      action={{
+                        title: "Encontrar um lugar",
+                        onPress: () => router.push("/(tabs)"),
+                      }}
+                    />
+                  )}
+                  {q.data?.favorites.map((f) => (
+                    <Card key={f.place_id}>
+                      <Text style={m.label}>
+                        {f.places?.name ?? "Lugar indisponível"}
+                      </Text>
+                      {f.places && (
+                        <QuietButton
+                          title="Ver lugar"
+                          onPress={() =>
+                            router.push({
+                              pathname: "/place/[id]",
+                              params: { id: f.place_id },
+                            })
+                          }
+                        />
+                      )}
+                    </Card>
+                  ))}
+                </View>
+              )}
+              <ActionRow
+                title="Lugares que compartilhei"
+                detail="Abra seus cadastros, mesmo os que estão em análise"
+                icon="location-outline"
+                expanded={section === "places"}
+                onPress={() => toggle("places")}
+              />
+              {section === "places" && (
+                <View style={{ gap: 12, paddingVertical: 14 }}>
+                  {q.data?.places.length === 0 && (
+                    <EmptyState
+                      icon="location-outline"
+                      text="Sua próxima descoberta pode começar com um lugar que você conhece."
+                      action={{
+                        title: "Compartilhar um lugar",
+                        onPress: () => router.push("/(tabs)/add"),
+                      }}
+                    />
+                  )}
+                  {q.data?.places.map((item) => (
+                    <Card key={item.id}>
+                      <Text style={m.label}>{item.name}</Text>
+                      <Text style={m.small}>
+                        {item.city}, {item.state}
+                      </Text>
+                      <StatusChip state={item.moderation_state} />
                       <QuietButton
-                        title="Ver lugar"
+                        title={"Abrir " + item.name}
                         onPress={() =>
                           router.push({
                             pathname: "/place/[id]",
-                            params: { id: f.place_id },
+                            params: { id: item.id },
                           })
                         }
                       />
-                    )}
-                  </Card>
-                ))}
-              </View>
-            )}
-            <ActionRow
-              title="Lugares que compartilhei"
-              detail="Abra seus cadastros, mesmo os que estão em análise"
-              icon="location-outline"
-              expanded={section === "places"}
-              onPress={() => toggle("places")}
-            />
-            {section === "places" && (
-              <View style={{ gap: 12, paddingVertical: 14 }}>
-                {q.data?.places.length === 0 && (
-                  <EmptyState text="Sua próxima descoberta pode começar com um lugar que você conhece." />
-                )}
-                {q.data?.places.map((item) => (
-                  <Card key={item.id}>
-                    <Text style={m.label}>{item.name}</Text>
-                    <Text style={m.small}>
-                      {item.city}, {item.state}
-                    </Text>
-                    <StatusChip state={item.moderation_state} />
-                    <QuietButton
-                      title={"Abrir " + item.name}
-                      onPress={() =>
-                        router.push({
-                          pathname: "/place/[id]",
-                          params: { id: item.id },
-                        })
-                      }
-                    />
-                  </Card>
-                ))}
-              </View>
-            )}
-            <ActionRow
-              title="Minhas avaliações"
-              detail="As experiências que você compartilhou"
-              icon="star-outline"
-              expanded={section === "reviews"}
-              onPress={() => toggle("reviews")}
-            />
-            {section === "reviews" && (
-              <View style={{ gap: 12, paddingVertical: 14 }}>
-                {q.data?.reviews.length === 0 && (
-                  <EmptyState text="Sua primeira experiência pode ajudar muita gente." />
-                )}
-                {q.data?.reviews.map((review) => (
-                  <Card key={review.id}>
-                    <Copy>
-                      {"★".repeat(review.rating)} · {review.body}
-                    </Copy>
-                    <StatusChip state={review.moderation_state} />
-                    <QuietButton
-                      title="Abrir lugar para editar"
-                      onPress={() =>
-                        router.push({
-                          pathname: "/place/[id]",
-                          params: { id: review.place_id },
-                        })
-                      }
-                    />
-                  </Card>
-                ))}
-              </View>
-            )}
-            <ActionRow
-              title="Minhas fotos"
-              detail="Suas memórias e descobertas"
-              icon="images-outline"
-              expanded={section === "photos"}
-              onPress={() => toggle("photos")}
-            />
-            {section === "photos" && (
-              <View style={{ gap: 12, paddingVertical: 14 }}>
-                {q.data?.photos.length === 0 && (
-                  <EmptyState text="Você pode escolher sua foto tocando em Editar perfil." />
-                )}
-                {q.data?.photos.map((item) => (
-                  <Card key={item.id}>
-                    <StatusChip state={item.moderation_state} />
-                    <ModerationPhoto path={item.object_path} />
-                    <QuietButton
-                      title="Remover minha foto"
-                      disabled={busy}
-                      onPress={() => confirmRemoval(item.id)}
-                    />
-                  </Card>
-                ))}
-              </View>
-            )}
-            <ActionRow
-              title="Acompanhar contribuições"
-              detail="Veja o que foi publicado ou está em análise"
-              icon="time-outline"
-              expanded={section === "contributions"}
-              onPress={() => toggle("contributions")}
-            />
-            {section === "contributions" && (
-              <View style={{ gap: 12, paddingVertical: 14 }}>
-                {q.data?.items.length === 0 && (
-                  <EmptyState text="Quando você compartilhar um lugar ou uma experiência, acompanhe por aqui." />
-                )}
-                {q.data?.items.map((item) => (
-                  <Card key={item.id}>
-                    <Text style={m.small}>
-                      {new Date(item.created_at).toLocaleDateString("pt-BR")}
-                    </Text>
-                    <StatusChip state={item.state} />
-                    {["rejected", "removed"].includes(item.state) && (
-                      <>
-                        <Field
-                          label="Conte por que devemos revisar"
-                          value={reason}
-                          onChangeText={setReason}
-                          multiline
-                          maxLength={1000}
-                        />
-                        <PrimaryButton
-                          title="Pedir revisão"
-                          disabled={busy || reason.trim().length < 5}
-                          onPress={() => void appeal(item.id)}
-                        />
-                      </>
-                    )}
-                  </Card>
-                ))}
-              </View>
-            )}
+                    </Card>
+                  ))}
+                </View>
+              )}
+              <ActionRow
+                title="Minhas avaliações"
+                detail="As experiências que você compartilhou"
+                icon="star-outline"
+                expanded={section === "reviews"}
+                onPress={() => toggle("reviews")}
+              />
+              {section === "reviews" && (
+                <View style={{ gap: 12, paddingVertical: 14 }}>
+                  {q.data?.reviews.length === 0 && (
+                    <EmptyState text="Sua primeira experiência pode ajudar muita gente." />
+                  )}
+                  {q.data?.reviews.map((review) => (
+                    <Card key={review.id}>
+                      <Copy>
+                        {"★".repeat(review.rating)} · {review.body}
+                      </Copy>
+                      <StatusChip state={review.moderation_state} />
+                      <QuietButton
+                        title="Abrir lugar para editar"
+                        onPress={() =>
+                          router.push({
+                            pathname: "/place/[id]",
+                            params: { id: review.place_id },
+                          })
+                        }
+                      />
+                    </Card>
+                  ))}
+                </View>
+              )}
+              <ActionRow
+                title="Minhas fotos"
+                detail="Suas memórias e descobertas"
+                icon="images-outline"
+                expanded={section === "photos"}
+                onPress={() => toggle("photos")}
+              />
+              {section === "photos" && (
+                <View style={{ gap: 12, paddingVertical: 14 }}>
+                  {q.data?.photos.length === 0 && (
+                    <EmptyState text="Você pode escolher sua foto tocando em Editar perfil." />
+                  )}
+                  {q.data?.photos.map((item) => (
+                    <Card key={item.id}>
+                      <StatusChip state={item.moderation_state} />
+                      <ModerationPhoto path={item.object_path} />
+                      <QuietButton
+                        title="Remover minha foto"
+                        disabled={busy}
+                        onPress={() => confirmRemoval(item.id)}
+                      />
+                    </Card>
+                  ))}
+                </View>
+              )}
+              <ActionRow
+                title="Acompanhar contribuições"
+                detail="Veja o que foi publicado ou está em análise"
+                icon="time-outline"
+                expanded={section === "contributions"}
+                onPress={() => toggle("contributions")}
+              />
+              {section === "contributions" && (
+                <View style={{ gap: 12, paddingVertical: 14 }}>
+                  {q.data?.items.length === 0 && (
+                    <EmptyState text="Quando você compartilhar um lugar ou uma experiência, acompanhe por aqui." />
+                  )}
+                  {q.data?.items.map((item) => (
+                    <Card key={item.id}>
+                      <Text style={m.small}>
+                        {new Date(item.created_at).toLocaleDateString("pt-BR")}
+                      </Text>
+                      <StatusChip state={item.state} />
+                      {["rejected", "removed"].includes(item.state) && (
+                        <>
+                          <Field
+                            label="Conte por que devemos revisar"
+                            value={reason}
+                            onChangeText={setReason}
+                            multiline
+                            maxLength={1000}
+                          />
+                          <PrimaryButton
+                            title="Pedir revisão"
+                            disabled={busy || reason.trim().length < 5}
+                            onPress={() => void appeal(item.id)}
+                          />
+                        </>
+                      )}
+                    </Card>
+                  ))}
+                </View>
+              )}
+            </View>
           </View>
         </>
       )}

@@ -6,5 +6,6 @@ export type MapCanvasProps = {
   onSelect: (id: string) => void;
   onPick?: (longitude: number, latitude: number) => void;
   center?: [number, number];
+  selectedId?: string;
   selectedPoint?: { latitude: number; longitude: number };
 };

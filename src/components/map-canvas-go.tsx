@@ -62,9 +62,10 @@ export default function ExpoGoMap(p: MapCanvasProps) {
               latitude: place.latitude!,
               longitude: place.longitude!,
             }}
+            accessibilityLabel={"Selecionar " + place.name}
             title={place.name}
             description={`${place.category} · ${place.city}, ${place.state}`}
-            pinColor="#0F766E"
+            pinColor={p.selectedId === place.id ? "#084F48" : "#0F766E"}
             onPress={() =>
               p.onPick
                 ? p.onPick(place.longitude!, place.latitude!)

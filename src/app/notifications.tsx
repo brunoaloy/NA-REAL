@@ -1,14 +1,8 @@
 import { router } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Screen,
-  Title,
-  Copy,
-  Card,
-  PrimaryButton,
-  ErrorState,
-  EmptyState,
-} from "../components/ui";
+import { Screen, Copy, Card, ErrorState, EmptyState } from "../components/ui";
+import { AppHeader } from "../components/design";
+import { QuietButton } from "../components/member-design";
 import { db } from "../services/supabase";
 import { userId } from "../services/catalog";
 export default function Notifications() {
@@ -29,10 +23,19 @@ export default function Notifications() {
   });
   return (
     <Screen>
-      <Title>Notificações</Title>
+      <AppHeader title="Notificações" back />
       {q.isPending && <Copy>Carregando…</Copy>}
       {q.isError && <ErrorState error={q.error} />}
-      {q.data?.length === 0 && <EmptyState text="Nenhuma notificação." />}
+      {q.data?.length === 0 && (
+        <EmptyState
+          icon="notifications-outline"
+          text="Tudo tranquilo por aqui. Quando alguém responder à sua pergunta, a novidade aparece aqui."
+          action={{
+            title: "Explorar lugares",
+            onPress: () => router.push("/(tabs)"),
+          }}
+        />
+      )}
       {q.data?.map((n) => (
         <Card key={n.id}>
           <Copy>{n.body}</Copy>
@@ -40,7 +43,7 @@ export default function Notifications() {
             {n.read_at ? "Lida" : "Não lida"} ·{" "}
             {new Date(n.created_at).toLocaleString("pt-BR")}
           </Copy>
-          <PrimaryButton
+          <QuietButton
             title="Abrir lugar"
             onPress={async () => {
               const r = await db()
@@ -57,7 +60,7 @@ export default function Notifications() {
           />
         </Card>
       ))}
-      <PrimaryButton title="Voltar" onPress={() => router.back()} />
+      <QuietButton title="Voltar" onPress={() => router.back()} />
     </Screen>
   );
 }

@@ -174,7 +174,7 @@ const assert = require("node:assert/strict");
     await context.setGeolocation({ latitude: -8.05, longitude: -34.88 });
     await page.goto(base);
     await page.getByRole("button", { name: "Explorar como visitante" }).click();
-    await page.getByText("Descubra lugares", { exact: true }).waitFor();
+    await page.getByText("Lugares para conhecer", { exact: true }).waitFor();
     assert.equal(nearSeen, false);
     await page
       .getByRole("button", { name: "Ordenar por proximidade", exact: true })

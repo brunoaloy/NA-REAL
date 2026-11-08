@@ -120,6 +120,7 @@ export function PhotoGallery({
   reviewId,
   profileId,
   compact = false,
+  cover = false,
   hero = false,
   hideWhenEmpty = false,
 }: {
@@ -127,6 +128,7 @@ export function PhotoGallery({
   reviewId?: string;
   profileId?: string;
   compact?: boolean;
+  cover?: boolean;
   hero?: boolean;
   hideWhenEmpty?: boolean;
 }) {
@@ -192,7 +194,7 @@ export function PhotoGallery({
     ) : null;
   return (
     <View style={{ gap: 10 }}>
-      {photos.length ? (
+      {photos.length && !(compact && imageFailures.includes(photos[0].id)) ? (
         hero ? (
           <>
             <ScrollView
@@ -249,9 +251,13 @@ export function PhotoGallery({
                 onError={() => failed(p.id)}
                 onLoad={() => loaded(p.id)}
                 style={{
-                  width: compact ? 72 : Math.min(280, width - 36),
-                  height: compact ? 82 : 180,
-                  borderRadius: 14,
+                  width: cover
+                    ? "100%"
+                    : compact
+                      ? 84
+                      : Math.min(280, width - 36),
+                  height: cover ? 164 : compact ? 94 : 180,
+                  borderRadius: cover ? 0 : 16,
                 }}
               />
             ))}
@@ -260,21 +266,59 @@ export function PhotoGallery({
       ) : (
         <View
           style={{
-            width: compact ? 72 : "100%",
-            height: compact ? 82 : hero ? 190 : 140,
-            borderRadius: hero ? 23 : 14,
+            width: cover ? "100%" : compact ? 84 : "100%",
+            height: cover ? 164 : compact ? 94 : hero ? 190 : 140,
+            borderRadius: cover ? 0 : hero ? 23 : 16,
             backgroundColor: "#EDF5F0",
+            overflow: "hidden",
             alignItems: "center",
             justifyContent: "center",
             gap: 12,
             padding: compact ? 0 : 20,
           }}
         >
+          {cover && (
+            <>
+              <View
+                style={{
+                  position: "absolute",
+                  right: -16,
+                  top: -48,
+                  width: 190,
+                  height: 190,
+                  borderRadius: 100,
+                  borderWidth: 28,
+                  borderColor: "#DFEDE4",
+                }}
+              />
+              <View
+                style={{
+                  position: "absolute",
+                  left: -40,
+                  bottom: -70,
+                  width: 190,
+                  height: 140,
+                  borderRadius: 80,
+                  backgroundColor: "#DCEBE2",
+                  transform: [{ rotate: "-18deg" }],
+                }}
+              />
+            </>
+          )}
           <Ionicons
-            name={hero ? "leaf-outline" : "image-outline"}
+            name={hero || compact ? "location-outline" : "image-outline"}
             size={compact ? 28 : 42}
             color="#759B86"
           />
+          {cover && (
+            <Text style={[m.small, { color: "#456F60" }]}>
+              {q.isPending
+                ? "Carregando foto…"
+                : q.isError || imageFailures.length
+                  ? "Foto indisponível"
+                  : "Cada lugar tem uma história"}
+            </Text>
+          )}
           {!compact && (
             <Text style={[m.small, { textAlign: "center" }]}>
               {q.isPending

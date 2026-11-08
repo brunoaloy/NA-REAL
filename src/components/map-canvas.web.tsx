@@ -16,6 +16,9 @@ export default function MapCanvas(p: MapCanvasProps) {
     if (!container.current) return;
     let m: maplibregl.Map;
     try {
+      maplibregl.setWorkerUrl(
+        `/maplibre/${maplibregl.getVersion()}/maplibre-gl-worker.mjs`,
+      );
       m = new maplibregl.Map({
         container: container.current,
         style: p.styleUrl,
@@ -122,6 +125,30 @@ export default function MapCanvas(p: MapCanvasProps) {
       maplibregl.GeoJSONSource | undefined;
     s?.setData(featureCollection(p.places));
   }, [p.places]);
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    const highlight = () => {
+      if (!m.getLayer("points")) return;
+      m.setPaintProperty("points", "circle-color", [
+        "case",
+        ["==", ["get", "id"], p.selectedId ?? ""],
+        "#084F48",
+        "#10B981",
+      ]);
+      m.setPaintProperty("points", "circle-radius", [
+        "case",
+        ["==", ["get", "id"], p.selectedId ?? ""],
+        14,
+        9,
+      ]);
+    };
+    if (m.isStyleLoaded()) highlight();
+    else m.once("idle", highlight);
+    return () => {
+      m.off("idle", highlight);
+    };
+  }, [p.selectedId]);
   useEffect(() => {
     if (p.center) map.current?.easeTo({ center: p.center, zoom: 13 });
   }, [p.center]);

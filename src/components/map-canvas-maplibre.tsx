@@ -109,8 +109,18 @@ export default function MapCanvas(p: MapCanvasProps) {
           type="circle"
           filter={["!", ["has", "point_count"]]}
           paint={{
-            "circle-color": "#10B981",
-            "circle-radius": 10,
+            "circle-color": [
+              "case",
+              ["==", ["get", "id"], p.selectedId ?? ""],
+              "#084F48",
+              "#10B981",
+            ],
+            "circle-radius": [
+              "case",
+              ["==", ["get", "id"], p.selectedId ?? ""],
+              14,
+              10,
+            ],
             "circle-stroke-color": "white",
             "circle-stroke-width": 3,
           }}

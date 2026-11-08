@@ -6,7 +6,7 @@ Aplicativo React Native/Expo existente, ampliado na Fase 2. Continuidade atual: 
 
 **Apresentação e acesso:** telas baseadas no mockup aprovado, com paisagem ilustrativa do Rio incluída no app, login, criação de conta e recuperação separados. Para receber o novo recurso visual e a dependência do gradiente, faça Pull, `npm ci` e reinicie `npm run phone`.
 
-**Tela inicial e busca:** interface compacta, filtros de cidade/UF aplicados de uma vez, atualização ao puxar e busca preservada ao abrir o mapa. Após receber os commits pelo GitHub Desktop, reinicie `npm run phone` para testar no iPhone.
+**Tela inicial e busca:** cidade em destaque, abertura acolhedora e cartões com fotos maiores. Filtros de cidade/UF aplicados de uma vez, atualização ao puxar e busca preservada ao abrir o mapa. A seleção de um pin abre uma prévia com acesso ao lugar. Veja a [rodada de design](docs/DESIGN_DESCOBERTA.md). Após receber os commits pelo GitHub Desktop, reinicie `npm run phone` para testar no iPhone.
 
 **Perfil e cadastro simplificados:** edição de nome, descrição e foto em uma janela; histórico recolhido; cadastro por endereço/pino, sem latitude/longitude. Busca de cidade e pontos de interesse do mapa nativo no Expo Go. A cobertura é a do provedor, sem garantia de todos os comércios.
 
