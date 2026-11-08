@@ -340,6 +340,38 @@ function ProfileContent({ session }: { session: Session | null }) {
               </View>
             )}
             <ActionRow
+              title="Lugares que compartilhei"
+              detail="Abra seus cadastros, mesmo os que estão em análise"
+              icon="location-outline"
+              expanded={section === "places"}
+              onPress={() => toggle("places")}
+            />
+            {section === "places" && (
+              <View style={{ gap: 12, paddingVertical: 14 }}>
+                {q.data?.places.length === 0 && (
+                  <EmptyState text="Sua próxima descoberta pode começar com um lugar que você conhece." />
+                )}
+                {q.data?.places.map((item) => (
+                  <Card key={item.id}>
+                    <Text style={m.label}>{item.name}</Text>
+                    <Text style={m.small}>
+                      {item.city}, {item.state}
+                    </Text>
+                    <StatusChip state={item.moderation_state} />
+                    <QuietButton
+                      title={"Abrir " + item.name}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/place/[id]",
+                          params: { id: item.id },
+                        })
+                      }
+                    />
+                  </Card>
+                ))}
+              </View>
+            )}
+            <ActionRow
               title="Minhas avaliações"
               detail="As experiências que você compartilhou"
               icon="star-outline"

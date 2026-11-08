@@ -17,7 +17,7 @@ export function AuthorLabel({ id }: { id: string }) {
   });
   return (
     <Copy>
-      {q.data?.display_name ?? "Usuário • " + id.slice(0, 8)}
+      {q.data?.display_name ?? "Pessoa da comunidade"}
       {q.data?.handle ? " @" + q.data.handle : ""}
     </Copy>
   );

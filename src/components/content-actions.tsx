@@ -1,3 +1,5 @@
+import { Pressable, Text } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { db } from "../services/supabase";
@@ -49,10 +51,33 @@ export function ContentActions({
   }
   return (
     <>
-      <PrimaryButton
-        title={open ? "Fechar opções de segurança" : "Denunciar / bloquear"}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={
+          open ? "Fechar opções de segurança" : "Denunciar / bloquear"
+        }
+        accessibilityState={{ expanded: open }}
         onPress={() => setOpen(!open)}
-      />
+        style={{
+          alignSelf: "flex-end",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 6,
+          padding: 10,
+          minHeight: 40,
+        }}
+      >
+        <Ionicons name="ellipsis-horizontal" size={19} color="#64748B" />
+        <Text
+          style={{
+            fontFamily: "Inter_400Regular",
+            fontSize: 12,
+            color: "#64748B",
+          }}
+        >
+          {open ? "Fechar opções" : "Mais opções"}
+        </Text>
+      </Pressable>
       {open && (
         <>
           <Field

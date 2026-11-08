@@ -12,6 +12,8 @@ Aplicativo React Native/Expo existente, ampliado na Fase 2. Continuidade atual: 
 
 **Estado atual do banco (06/11/2026):** migrations 001–010 confirmadas no Supabase remoto, postflight estrutural aprovado e consultas públicas respondendo HTTP 200. Catálogo público vazio. Testes reais com duas contas, moderação, fotos e aparelhos continuam pendentes; Sprint 01 permanece aberto. Relatos de schema ausente nas seções históricas descrevem tentativas anteriores.
 
+**Detalhes dos lugares:** galeria ampliável, rota, favoritos e avaliações simplificados; seus cadastros pendentes podem ser abertos pelo perfil. Veja o [roteiro de validação no iPhone](docs/VALIDACAO_VISITA_IPHONE.md).
+
 ## Desenvolvimento
 
 Node 24 e npm 11:

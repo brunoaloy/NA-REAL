@@ -165,10 +165,7 @@ const assert = require("node:assert/strict");
     await page
       .getByRole("button", { name: "Avaliações anteriores", exact: true })
       .click();
-    await page
-      .getByText("★★★★ · Review fixture 1", { exact: true })
-      .last()
-      .waitFor();
+    await page.getByText("Review fixture 1", { exact: true }).last().waitFor();
     await page
       .getByRole("button", { name: "Avaliações anteriores", exact: true })
       .waitFor({ state: "hidden" });
