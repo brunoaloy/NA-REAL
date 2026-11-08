@@ -1,3 +1,4 @@
+import { latestContributions } from "../validation/contributions";
 import { db } from "./supabase";
 export async function loadMyProfile(uid: string) {
   const [p, favorites, reviews, items, photos, account, ownedPlaces] =
@@ -20,7 +21,9 @@ export async function loadMyProfile(uid: string) {
         .limit(50),
       db()
         .from("moderation_items")
-        .select("id,target_type,state,created_at")
+        .select(
+          "id,target_type,target_id,state,created_at,title:payload->>name,body:payload->>body,place_id:payload->>place_id,moderation_actions(id,decision,reason,created_at)",
+        )
         .eq("author_id", uid)
         .order("created_at", { ascending: false })
         .limit(50),
@@ -57,7 +60,7 @@ export async function loadMyProfile(uid: string) {
     places: ownedPlaces.data ?? [],
     account: account.data,
     reviews: reviews.data ?? [],
-    items: items.data ?? [],
+    items: latestContributions(items.data ?? []),
     photos: photos.data ?? [],
     favorites: (favorites.data ?? []).map((f) => ({
       ...f,

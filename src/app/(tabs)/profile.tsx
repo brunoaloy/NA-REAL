@@ -21,7 +21,7 @@ import {
   ErrorState,
   EmptyState,
 } from "../../components/ui";
-import { AppHeader, StatusChip } from "../../components/design";
+import { AppHeader } from "../../components/design";
 import { AuthShell } from "../../components/auth-design";
 import {
   ActionRow,
@@ -31,6 +31,11 @@ import {
   WarmIntro,
   m,
 } from "../../components/member-design";
+import {
+  ContributionReview,
+  ContributionStatus,
+} from "../../components/contribution-tracking";
+import { contributionTitle } from "../../validation/contributions";
 import { ProfileAvatar } from "../../components/profile-avatar";
 import { ModerationPhoto } from "../../components/moderation-photo";
 import { useModerator } from "../../hooks/use-moderator";
@@ -205,26 +210,32 @@ function ProfileContent({
         },
       ]);
   }
-  async function appeal(itemId?: string) {
-    if (!session) return;
+  async function appeal(itemId?: string, message = reason): Promise<boolean> {
+    if (!session || locked.current) return false;
+    locked.current = true;
     setBusy(true);
     setError(undefined);
     try {
       const r = itemId
-        ? await db()
-            .from("moderation_appeals")
-            .insert({ item_id: itemId, author_id: session.user.id, reason })
+        ? await db().from("moderation_appeals").insert({
+            item_id: itemId,
+            author_id: session.user.id,
+            reason: message.trim(),
+          })
         : await db()
             .from("account_appeals")
-            .insert({ user_id: session.user.id, reason });
+            .insert({ user_id: session.user.id, reason: message.trim() });
       if (r.error) throw r.error;
       setReason("");
       setNotice(
         "Seu pedido foi recebido para revisão. A decisão atual continua válida até a análise.",
       );
+      return true;
     } catch (e) {
       setError(e);
+      return false;
     } finally {
+      locked.current = false;
       setBusy(false);
     }
   }
@@ -412,7 +423,13 @@ function ProfileContent({
                       <Text style={m.small}>
                         {item.city}, {item.state}
                       </Text>
-                      <StatusChip state={item.moderation_state} />
+                      <ContributionStatus
+                        state={item.moderation_state}
+                        published={
+                          item.verification_status === "approved" &&
+                          !q.data?.account?.suspended
+                        }
+                      />
                       <QuietButton
                         title={"Abrir " + item.name}
                         onPress={() =>
@@ -443,7 +460,7 @@ function ProfileContent({
                       <Copy>
                         {"★".repeat(review.rating)} · {review.body}
                       </Copy>
-                      <StatusChip state={review.moderation_state} />
+                      <ContributionStatus state={review.moderation_state} />
                       <QuietButton
                         title="Abrir lugar para editar"
                         onPress={() =>
@@ -471,7 +488,7 @@ function ProfileContent({
                   )}
                   {q.data?.photos.map((item) => (
                     <Card key={item.id}>
-                      <StatusChip state={item.moderation_state} />
+                      <ContributionStatus state={item.moderation_state} />
                       <ModerationPhoto path={item.object_path} />
                       <QuietButton
                         title="Remover minha foto"
@@ -496,25 +513,48 @@ function ProfileContent({
                   )}
                   {q.data?.items.map((item) => (
                     <Card key={item.id}>
+                      <Text style={m.label}>{contributionTitle(item)}</Text>
                       <Text style={m.small}>
                         {new Date(item.created_at).toLocaleDateString("pt-BR")}
                       </Text>
-                      <StatusChip state={item.state} />
-                      {["rejected", "removed"].includes(item.state) && (
-                        <>
-                          <Field
-                            label="Conte por que devemos revisar"
-                            value={reason}
-                            onChangeText={setReason}
-                            multiline
-                            maxLength={1000}
-                          />
-                          <PrimaryButton
-                            title="Pedir revisão"
-                            disabled={busy || reason.trim().length < 5}
-                            onPress={() => void appeal(item.id)}
-                          />
-                        </>
+                      <ContributionReview
+                        item={item}
+                        busy={busy}
+                        onAppeal={(value) => appeal(item.id, value)}
+                      />
+                      {item.target_type === "places" && item.target_id && (
+                        <QuietButton
+                          title="Ver cadastro"
+                          onPress={() =>
+                            router.push({
+                              pathname: "/place/[id]",
+                              params: { id: item.target_id! },
+                            })
+                          }
+                        />
+                      )}
+                      {item.target_type === "reviews" && item.place_id && (
+                        <QuietButton
+                          title="Abrir lugar para editar avaliação"
+                          onPress={() =>
+                            router.push({
+                              pathname: "/place/[id]",
+                              params: { id: item.place_id!, tab: "Avaliações" },
+                            })
+                          }
+                        />
+                      )}
+                      {item.target_type === "profiles" && (
+                        <QuietButton
+                          title="Editar meu perfil"
+                          onPress={openEditor}
+                        />
+                      )}
+                      {item.target_type === "photos" && (
+                        <QuietButton
+                          title="Ver minhas fotos"
+                          onPress={() => setSection("photos")}
+                        />
                       )}
                     </Card>
                   ))}

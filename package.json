@@ -65,7 +65,7 @@
     "test": "node tests/run.cjs",
     "test:db": "bash scripts/test-db.sh",
     "test:smoke": "node tests/smoke.cjs",
-    "format:check": "prettier --check src tests docs package.json",
+    "format:check": "prettier --check src tests docs package.json supabase/templates",
     "test:functions": "npx deno check supabase/functions/moderate-pending/index.ts supabase/functions/prepare-photo/index.ts supabase/functions/delete-account/index.ts supabase/functions/delete-photo/index.ts",
     "services:check": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/check-services.cjs",
     "services:start": "supabase start --exclude studio,logflare,vector,imgproxy,supavisor,postgres-meta",
@@ -86,7 +86,10 @@
     "test:place-ui": "node tests/place-detail-smoke.cjs",
     "test:design-ui": "node tests/design-smoke.cjs",
     "distribution:check": "node scripts/check-distribution.cjs",
-    "test:pilot-ui": "node tests/pilot-smoke.cjs"
+    "test:pilot-ui": "node tests/pilot-smoke.cjs",
+    "auth-email:prepare": "node scripts/auth-email-branding.cjs",
+    "auth-email:apply": "node --use-env-proxy scripts/auth-email-branding.cjs --apply",
+    "test:readiness-ui": "node tests/readiness-smoke.cjs"
   },
   "private": true
 }

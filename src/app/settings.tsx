@@ -84,6 +84,12 @@ export default function Settings() {
         onPress={() => router.push("/test-guide")}
       />
       <ActionRow
+        title="Enviar feedback"
+        detail="Conte como foi usar o NA REAL"
+        icon="chatbubble-ellipses-outline"
+        onPress={() => router.push("/feedback")}
+      />
+      <ActionRow
         title="Fontes e licenças"
         detail="Sobre os dados locais de cidades"
         icon="information-circle-outline"

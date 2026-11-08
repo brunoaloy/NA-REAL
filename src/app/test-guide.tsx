@@ -1,10 +1,16 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import { Text, View, Pressable } from "react-native";
 import Constants from "expo-constants";
 import { Ionicons } from "@expo/vector-icons";
 import { AppHeader } from "../components/design";
 import { Screen, Card, colors } from "../components/ui";
-import { GentleNote, WarmIntro, m } from "../components/member-design";
+import {
+  GentleNote,
+  WarmIntro,
+  QuietButton,
+  m,
+} from "../components/member-design";
 const tasks = [
   "Encontrar um lugar pela cidade ou pelo mapa",
   "Salvar um favorito e abrir novamente",
@@ -68,6 +74,10 @@ export default function TestGuide() {
           localização e e-mail precisam acontecer no aparelho.
         </Text>
       </View>
+      <QuietButton
+        title="Enviar feedback"
+        onPress={() => router.push("/feedback")}
+      />
     </Screen>
   );
 }

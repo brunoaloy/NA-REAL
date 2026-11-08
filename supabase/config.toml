@@ -38,3 +38,11 @@ enable_confirmations = true
 max_frequency = "1s"
 [analytics]
 enabled = false
+
+# Templates locais. O projeto hospedado precisa ser configurado separadamente.
+[auth.email.template.confirmation]
+subject = "Confirme seu e-mail no NA REAL"
+content_path = "./supabase/templates/confirmation.html"
+[auth.email.template.recovery]
+subject = "Recupere seu acesso ao NA REAL"
+content_path = "./supabase/templates/recovery.html"

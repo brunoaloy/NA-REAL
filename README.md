@@ -16,6 +16,8 @@ Aplicativo React Native/Expo existente, ampliado na Fase 2. Continuidade atual: 
 
 **Próximo piloto no iPhone:** cidades sugeridas e lembradas, cadastro guiado com foto opcional, acompanhamento de aprovação e guia de tarefas no app. [Preparação do piloto e TestFlight](docs/PILOTO_IPHONE.md). Moderação e limpeza dos cadastros de demonstração ainda exigem escrita autorizada no Supabase; os SQLs operacionais estão em `scripts/pilot`.
 
+**Identidade dos e-mails e acompanhamento:** modelos de confirmação/recuperação com a marca NA REAL preparados para ativação com SMTP/domínio próprio. [Configuração de e-mail](docs/EMAIL_NA_REAL.md). Perfil mostra status/motivo da revisão e configurações oferecem compartilhamento de feedback.
+
 ## Desenvolvimento
 
 Node 24 e npm 11:

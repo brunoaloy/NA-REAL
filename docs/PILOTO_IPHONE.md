@@ -25,6 +25,10 @@ Para concluir no projeto **NA REAL**, `zcnfssihiqmbrlwvlsme`, com uma conexão d
 
 A API disponível precisa de acesso efetivo de escrita ao banco para fazer essas operações daqui; um token que continue produzindo sessão read-only não basta. Não envie tokens, senhas ou service_role no chat. A inspeção anterior de Edge Functions retornou 403, portanto não há confirmação de deployment pelo endpoint de gerenciamento.
 
+## E-mails e acompanhamento
+
+Antes dos convites, configure SMTP/domínio e os [e-mails NA REAL](EMAIL_NA_REAL.md). O proprietário ainda não possui esse serviço; os templates estão preparados, mas a aplicação remota foi recusada com 403. No app, o acompanhamento mostra a versão mais recente da contribuição, status e motivo da revisão. Avaliações podem ser abertas para edição; lugares não publicados não ganharam edição direta do banco, e podem receber pedido de revisão. Configurações/guia oferecem Enviar feedback: a pessoa revisa seus textos e dados básicos do aparelho e escolhe por qual aplicativo compartilhar; não há envio automático para um servidor de feedback.
+
 ## Opção imediata: Expo Go
 
 É um teste compartilhado do projeto, não uma instalação independente do NA REAL.

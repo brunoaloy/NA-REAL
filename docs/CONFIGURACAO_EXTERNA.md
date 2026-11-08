@@ -32,6 +32,8 @@ Antes de aplicar 003, agende a revisão do legado: ela quarentena o UGC existent
 
 ## Autenticação
 
+Para o remetente e os modelos com a marca NA REAL, veja [EMAIL_NA_REAL.md](EMAIL_NA_REAL.md). Templates locais não são aplicados automaticamente ao projeto hospedado.
+
 Configure SMTP, política de senhas, confirmação, Site URL e redirects para development build e host web. PKCE requer o mesmo contexto/dispositivo. Teste confirmação e recuperação real antes do lançamento. Google/Apple continuam dependentes de OAuth, IDs/client secrets/entitlements e implementação final; botões de login social não são simulados.
 
 ## Lojas, notificações e suporte

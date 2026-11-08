@@ -50,7 +50,7 @@ import { db, supabase, configured } from "../../services/supabase";
 import { sendMessage, saveReview } from "../../services/catalog";
 import { useSession } from "../../hooks/use-session";
 export default function Detail() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, tab } = useLocalSearchParams<{ id: string; tab?: string }>();
   if (!validPlaceId(id))
     return (
       <Screen>
@@ -62,11 +62,24 @@ export default function Detail() {
         />
       </Screen>
     );
-  return <DetailSession key={id} id={id} />;
+  return (
+    <DetailSession key={id + ":" + (tab ?? "")} id={id} initialTab={tab} />
+  );
 }
-function DetailSession({ id }: { id: string }) {
+function DetailSession({
+  id,
+  initialTab,
+}: {
+  id: string;
+  initialTab?: string;
+}) {
   const session = useSession();
-  const [tab, setTab] = useState("Geral");
+  const [tab, setTab] = useState(
+    initialTab &&
+      ["Geral", "Avaliações", "Ao vivo", "Sala"].includes(initialTab)
+      ? initialTab
+      : "Geral",
+  );
   return (
     <DetailContent
       key={session?.user.id ?? "guest"}
