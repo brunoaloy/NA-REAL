@@ -2,6 +2,8 @@
 
 Preparação de 08/11/2026. O proprietário ainda não possui domínio nem serviço de envio. Foram preparados os modelos e a configuração de marca; **eles não foram ativados no projeto hospedado**. A API de configurações Auth recusou leitura e aplicação com HTTP 403. Nenhum e-mail foi enviado nesta rodada.
 
+Opções para a próxima decisão: [domínio e serviço de envio](OPCOES_DOMINIO_EMAIL.md). As sugestões ainda não têm disponibilidade ou preço confirmados.
+
 ## O que está pronto
 
 | Mensagem              | Assunto                        | Modelo                                 |
