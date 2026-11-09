@@ -196,7 +196,8 @@ const { readEnvironment } = require("../scripts/setup-mobile.cjs");
       before,
       "Suggestions are offline and do not query Supabase",
     );
-    await button("Aplicar filtros").click();
+    await button("Explorar cidade").click();
+    await button("Voltar à lista").click();
     await page
       .getByRole("button", { name: "Escolher cidade", exact: true })
       .getByText("Osório, RS", { exact: true })

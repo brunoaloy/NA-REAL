@@ -3,10 +3,16 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { preferredCity, type CityPreference } from "../validation/cities";
 const key = "@nareal/discovery-city/v1";
 let writes: Promise<unknown> = Promise.resolve();
+const listeners = new Set<
+  (value: CityPreference | null, source: symbol) => void
+>();
 export function usePreferredCity(
   onRestore?: (value: CityPreference | null) => void,
+  onExternalChange?: (value: CityPreference | null) => void,
 ) {
-  const restore = useRef(onRestore);
+  const restore = useRef(onRestore),
+    externalChange = useRef(onExternalChange),
+    instance = useRef(Symbol("city-preference"));
   const revision = useRef(0);
   const [city, setCity] = useState<CityPreference | null>(null),
     [ready, setReady] = useState(false),
@@ -14,6 +20,14 @@ export function usePreferredCity(
   useEffect(() => {
     let active = true;
     const initialRevision = revision.current;
+    const receive = (value: CityPreference | null, source: symbol) => {
+      if (source === instance.current) return;
+      revision.current++;
+      setCity(value);
+      setError("");
+      externalChange.current?.(value);
+    };
+    listeners.add(receive);
     void AsyncStorage.getItem(key)
       .then((raw) => {
         if (active && revision.current === initialRevision) {
@@ -37,6 +51,7 @@ export function usePreferredCity(
       });
     return () => {
       active = false;
+      listeners.delete(receive);
     };
   }, []);
   async function save(value: CityPreference | null) {
@@ -44,6 +59,7 @@ export function usePreferredCity(
     const next = preferredCity(value);
     setCity(next);
     setError("");
+    for (const receive of listeners) receive(next, instance.current);
     const operation = writes
       .catch(() => undefined)
       .then(() =>

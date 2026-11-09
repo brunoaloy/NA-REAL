@@ -26,6 +26,9 @@ import {
   DiscoveryHero,
 } from "../../components/design";
 import { QuietButton, m } from "../../components/member-design";
+import { CityPicker } from "../../components/city-picker";
+import { startRegistration } from "../../services/start-registration";
+import type { CityPreference } from "../../validation/cities";
 import { CityFields } from "../../components/city-fields";
 import { usePreferredCity } from "../../hooks/use-preferred-city";
 import { cityCenter } from "../../services/cities";
@@ -46,9 +49,19 @@ export default function Explore() {
   const [locationError, setLocationError] = useState<unknown>();
   const touched = useRef(false);
   const [filters, setFilters] = useState(emptyFilters);
-  const preference = usePreferredCity((value) => {
-    if (!touched.current && value) setFilters({ ...emptyFilters, ...value });
-  });
+  const preference = usePreferredCity(
+    (value) => {
+      if (!touched.current && value) setFilters({ ...emptyFilters, ...value });
+    },
+    (value) => {
+      updateFilters({ ...emptyFilters, ...(value ?? {}) });
+      setInput("");
+      setPosition(null);
+      setAdvanced(false);
+      setLocationError(undefined);
+      setFilterError(undefined);
+    },
+  );
   function updateFilters(value: typeof filters) {
     touched.current = true;
     setFilters(value);
@@ -57,6 +70,7 @@ export default function Explore() {
   const [draftCity, setDraftCity] = useState("");
   const [draftState, setDraftState] = useState("");
   const [advanced, setAdvanced] = useState(false);
+  const [choosingCity, setChoosingCity] = useState(false);
   const [filterError, setFilterError] = useState<unknown>();
   const { search, category, city, state } = filters;
   const filtered = hasFilters(filters);
@@ -115,6 +129,7 @@ export default function Explore() {
         state: draftState,
       });
       updateFilters(next);
+      if (next.city !== city || next.state !== state) setPosition(null);
       void preference.save(
         next.city && next.state ? { city: next.city, state: next.state } : null,
       );
@@ -133,12 +148,34 @@ export default function Explore() {
     }
     setAdvanced(!advanced);
   }
+  function chooseCity(value: CityPreference) {
+    updateFilters({ ...emptyFilters, ...value });
+    setInput("");
+    setPosition(null);
+    setLocationError(undefined);
+    setFilterError(undefined);
+    setAdvanced(false);
+    setChoosingCity(false);
+    void preference.save(value);
+    const center = cityCenter(value.city, value.state);
+    router.push({
+      pathname: "/map",
+      params: {
+        ...value,
+        scope: "city",
+        ...(center
+          ? { latitude: String(center[1]), longitude: String(center[0]) }
+          : {}),
+      },
+    });
+  }
   function openMap() {
     const center = cityCenter(city, state);
     router.push({
       pathname: "/map",
       params: {
         ...filters,
+        ...(city && state ? { scope: "city" } : {}),
         ...(center
           ? {
               latitude: String(center[1]),
@@ -160,7 +197,18 @@ export default function Explore() {
       refreshing={q.isRefetching && !q.isFetchingNextPage}
     >
       <AppHeader />
-      <DiscoveryHero city={city} state={state} onChooseCity={openFilters} />
+      <DiscoveryHero
+        city={city}
+        state={state}
+        onChooseCity={() => setChoosingCity(true)}
+      />
+      {choosingCity && (
+        <CityPicker
+          initial={{ city, state }}
+          onClose={() => setChoosingCity(false)}
+          onChoose={chooseCity}
+        />
+      )}
       <SearchBar value={input} onChange={setInput} onSearch={submitSearch} />
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
         <Pressable
@@ -294,6 +342,23 @@ export default function Explore() {
         value={category}
         onChange={(value) => updateFilters({ ...filters, category: value })}
       />
+      {city && state && (
+        <Card>
+          <Text style={m.section}>{city} para descobrir</Text>
+          <Text style={m.body}>
+            Explore os comércios exibidos no mapa do celular e os pins da
+            comunidade NA REAL.
+          </Text>
+          <PrimaryButton
+            title="Explorar locais da cidade no mapa"
+            onPress={() => chooseCity({ city, state })}
+          />
+          <QuietButton
+            title="Não encontrou um lugar? Cadastrar"
+            onPress={() => startRegistration({ city, state, name: search })}
+          />
+        </Card>
+      )}
       {filtered && (
         <View
           style={{
@@ -502,7 +567,9 @@ export default function Explore() {
               <View style={{ alignSelf: "stretch" }}>
                 <PrimaryButton
                   title="Adicionar lugar"
-                  onPress={() => router.push("/(tabs)/add")}
+                  onPress={() =>
+                    startRegistration({ city, state, name: search })
+                  }
                 />
               </View>
               <Text
@@ -544,6 +611,12 @@ export default function Explore() {
               title={q.isFetchingNextPage ? "Carregando…" : "Carregar mais"}
               disabled={q.isFetchingNextPage}
               onPress={() => void q.fetchNextPage()}
+            />
+          )}
+          {items.length > 0 && (
+            <QuietButton
+              title="Não encontrou o que procura? Cadastrar lugar"
+              onPress={() => startRegistration({ city, state, name: search })}
             />
           )}
           {items.length > 0 && (

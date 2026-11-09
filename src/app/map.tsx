@@ -10,6 +10,10 @@ import {
   type MapPoint,
 } from "../validation/geocoding";
 import { mapFilters, mapCenter } from "../validation/explore";
+import { CityPicker } from "../components/city-picker";
+import { usePreferredCity } from "../hooks/use-preferred-city";
+import { startRegistration } from "../services/start-registration";
+import type { CityPreference } from "../validation/cities";
 import { cityCenter } from "../services/cities";
 import { regionBounds } from "../validation/map-runtime";
 import {
@@ -39,6 +43,7 @@ import { configured } from "../services/supabase";
 export default function MapPage() {
   const params = useLocalSearchParams<{
     pick?: string;
+    scope?: string;
     placeId?: string;
     search?: string;
     category?: string;
@@ -54,6 +59,10 @@ export default function MapPage() {
     mapCenter(params) ??
     (!pick ? cityCenter(initial.city, initial.state) : undefined);
   const [bounds, setBounds] = useState<Bounds>(BRAZIL);
+  const [wholeCity, setWholeCity] = useState(params.scope === "city");
+  const [choosingCity, setChoosingCity] = useState(false),
+    [showList, setShowList] = useState(false);
+  const preference = usePreferredCity();
   const [input, setInput] = useState(initial.search),
     [search, setSearch] = useState(initial.search),
     [category, setCategory] = useState(initial.category);
@@ -80,16 +89,20 @@ export default function MapPage() {
     autoLocated = useRef(false);
   const style = process.env.EXPO_PUBLIC_MAP_STYLE_URL,
     mapAvailable = builtInMap || Boolean(style);
+  const queryBounds =
+    wholeCity && cityScope.city && cityScope.state ? BRAZIL : bounds;
   const q = useInfiniteQuery({
     queryKey: [
       "map",
-      bounds,
+      queryBounds,
       search,
       category,
       cityScope.city,
       cityScope.state,
     ],
-    enabled: configured && mapAvailable,
+    enabled:
+      configured &&
+      (mapAvailable || Boolean(cityScope.city && cityScope.state)),
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
       places(
@@ -98,10 +111,12 @@ export default function MapPage() {
         pageParam,
         cityScope.city,
         cityScope.state,
-        bounds,
+        queryBounds,
       ),
     getNextPageParam: (last, pages) =>
-      last.length === 50 && pages.length < 10 ? pages.length : undefined,
+      last.length === 50 && (wholeCity || pages.length < 10)
+        ? pages.length
+        : undefined,
   });
   const items = q.data?.pages.flat() ?? [];
   const selectedPlace = items.find((place) => place.id === selected);
@@ -121,7 +136,10 @@ export default function MapPage() {
     try {
       const point = await findAddress(addressQuery("", value, ""));
       move(point);
-      if (!keepScope) setCityScope({ city: "", state: "" });
+      if (!keepScope) {
+        setCityScope({ city: "", state: "" });
+        setWholeCity(false);
+      }
     } catch (e) {
       setError(e);
     } finally {
@@ -157,6 +175,7 @@ export default function MapPage() {
       const point = await requestPosition();
       move(point);
       setCityScope({ city: "", state: "" });
+      setWholeCity(false);
       setCityText("");
     } catch (e) {
       setError(e);
@@ -172,6 +191,21 @@ export default function MapPage() {
       setError(undefined);
     } else setError(new Error("Escolha um lugar no Brasil para continuar."));
   }, []);
+  function chooseCity(value: CityPreference) {
+    setCityScope(value);
+    setCityText([value.city, value.state].join(", "));
+    setWholeCity(true);
+    setSearch("");
+    setInput("");
+    setCategory("Todos");
+    setSelected("");
+    setChoosingCity(false);
+    setError(undefined);
+    void preference.save(value);
+    const target = cityCenter(value.city, value.state);
+    if (target) move({ longitude: target[0], latitude: target[1] });
+    else void lookup([value.city, value.state].join(", "), true);
+  }
   async function openMaps() {
     const query = cityText.trim()
       ? `comércios em ${cityText.trim()}`
@@ -208,6 +242,25 @@ export default function MapPage() {
           Encontre sua cidade. Descubra o que tem por perto.
         </Text>
       )}
+      {!pick && (
+        <ActionRow
+          title="Escolher cidade no mapa"
+          detail={
+            cityScope.city
+              ? [cityScope.city, cityScope.state].filter(Boolean).join(", ")
+              : "Escolha cidade e UF para explorar"
+          }
+          icon="location-outline"
+          onPress={() => setChoosingCity(true)}
+        />
+      )}
+      {choosingCity && (
+        <CityPicker
+          initial={cityScope}
+          onClose={() => setChoosingCity(false)}
+          onChoose={chooseCity}
+        />
+      )}
       <SearchBar
         label="Buscar cidade ou endereço"
         placeholder="Ex.: Recife, PE"
@@ -217,9 +270,9 @@ export default function MapPage() {
         onSearch={(value) => void lookup(value)}
         busy={locating}
       />
-      {(initial.city || initial.state) && (
+      {(cityScope.city || cityScope.state) && (
         <Text style={m.small}>
-          Região: {[initial.city, initial.state].filter(Boolean).join(", ")}
+          Região: {[cityScope.city, cityScope.state].filter(Boolean).join(", ")}
         </Text>
       )}
       <QuietButton
@@ -227,6 +280,9 @@ export default function MapPage() {
         disabled={locating}
         onPress={() => void locate()}
       />
+      {preference.error !== "" && (
+        <Text style={m.small}>{preference.error}</Text>
+      )}
       {error != null && <ErrorState error={error} />}
       {mapAvailable ? (
         <View
@@ -331,19 +387,33 @@ export default function MapPage() {
             </Text>
           </View>
           <QuietButton
-            title="Abrir busca no aplicativo Mapas"
-            onPress={() => void openMaps()}
-          />
-          <QuietButton
-            title="Compartilhar um lugar"
-            onPress={() => router.push("/(tabs)/add")}
+            title={
+              cityScope.city && cityScope.state
+                ? "Cadastrar lugar nesta cidade"
+                : "Compartilhar um lugar"
+            }
+            onPress={() =>
+              startRegistration({ ...cityScope, name: search }, true)
+            }
           />
           <Text accessibilityRole="header" style={m.section}>
             Lugares da comunidade
           </Text>
           <Text style={m.small}>
-            Experiências e dicas de quem conhece cada lugar.
+            {wholeCity && cityScope.city
+              ? `Cadastros da comunidade em ${cityScope.city}. A lista também inclui lugares sem pino; carregue mais para continuar explorando.`
+              : "Experiências e dicas de quem conhece cada lugar."}
           </Text>
+          <QuietButton
+            title={
+              showList
+                ? "Recolher lista de lugares NA REAL"
+                : "Ver lista de lugares NA REAL"
+            }
+            onPress={() => setShowList(!showList)}
+          />
+          {showList &&
+            items.map((place) => <PlaceCard key={place.id} place={place} />)}
           <ActionRow
             title={
               showSearch
@@ -358,7 +428,11 @@ export default function MapPage() {
           {showSearch && (
             <SearchBar
               label="Buscar nome ou cidade"
-              buttonLabel="Buscar nesta área"
+              buttonLabel={
+                wholeCity && cityScope.city
+                  ? "Buscar nesta cidade"
+                  : "Buscar nesta área"
+              }
               value={input}
               onChange={setInput}
               onSearch={(value) => {
@@ -371,6 +445,10 @@ export default function MapPage() {
               }}
             />
           )}
+          <Text style={m.small}>
+            A busca e as categorias abaixo filtram somente os cadastros NA REAL.
+            Os outros pontos são exibidos pelo próprio mapa.
+          </Text>
           <CategoryChips compact value={category} onChange={setCategory} />
           {q.isError && (
             <>
@@ -387,11 +465,19 @@ export default function MapPage() {
           )}
           {q.hasNextPage && (
             <QuietButton
-              title="Carregar mais nesta área"
+              title={
+                wholeCity && cityScope.city
+                  ? "Carregar mais nesta cidade"
+                  : "Carregar mais nesta área"
+              }
               disabled={q.isFetchingNextPage}
               onPress={() => void q.fetchNextPage()}
             />
           )}
+          <QuietButton
+            title="Abrir também no aplicativo Mapas"
+            onPress={() => void openMaps()}
+          />
         </>
       )}
       <QuietButton title="Voltar à lista" onPress={() => router.back()} />

@@ -161,7 +161,10 @@ const { readEnvironment } = require("../scripts/setup-mobile.cjs");
       .fill("Recife");
     await page.getByRole("textbox", { name: "UF", exact: true }).fill("PE");
     await page
-      .getByRole("button", { name: "Aplicar filtros", exact: true })
+      .getByRole("button", { name: "Explorar cidade", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Voltar à lista", exact: true })
       .click();
     await page
       .getByRole("button", { name: "Escolher cidade", exact: true })
@@ -196,7 +199,7 @@ const { readEnvironment } = require("../scripts/setup-mobile.cjs");
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(base + "/map?latitude=-8.05&longitude=-34.88");
     const canvas = page.locator(
-      '[aria-label="Mapa interativo de lugares"] canvas',
+      '[aria-label="Mapa interativo de lugares"] canvas:visible',
     );
     await canvas.waitFor();
     // Wait for the community source to render at the seeded center, then select its real canvas point.

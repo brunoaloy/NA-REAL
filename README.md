@@ -18,6 +18,8 @@ Aplicativo React Native/Expo existente, ampliado na Fase 2. Continuidade atual: 
 
 **Identidade dos e-mails e acompanhamento:** modelos de confirmação/recuperação com a marca NA REAL preparados para ativação com SMTP/domínio próprio. [Configuração de e-mail](docs/EMAIL_NA_REAL.md). Perfil mostra status/motivo da revisão e configurações oferecem compartilhamento de feedback.
 
+**Cidade → mapa → cadastro:** seleção de cidade abre o mapa dentro do app, com pontos do mapa nativo e lista paginada da comunidade. Cadastro do que falta leva cidade/UF e preserva a escolha sobre um rascunho anterior. [Como funciona e limites de cobertura](docs/CIDADES_MAPA_CADASTRO.md).
+
 ## Desenvolvimento
 
 Node 24 e npm 11:

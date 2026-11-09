@@ -34,6 +34,7 @@ import {
   type MapPoint,
 } from "../../validation/geocoding";
 import { placeInput } from "../../validation/domain";
+import { registrationContext } from "../../validation/registration-context";
 import { validatePlaceStep } from "../../validation/add-journey";
 import {
   mapCenter,
@@ -58,12 +59,24 @@ function AddContent({ session }: { session: Session | null }) {
     latitude?: string;
     longitude?: string;
     locationKey?: string;
+    requestKey?: string;
+    city?: string;
+    state?: string;
+    suggestedName?: string;
   }>();
+  const context = registrationContext(params);
+  const [handledContext, setHandledContext] = useState(context?.key);
+  const incoming = context && context.key !== handledContext;
   const touched = useRef(false);
-  const [form, setForm] = useState(blank),
+  const [form, setForm] = useState({
+      ...blank,
+      name: context?.name ?? "",
+      city: context?.city ?? "",
+      state: context?.state ?? "",
+    }),
     [step, setStep] = useState(0);
   const preference = usePreferredCity((value) => {
-    if (value && !touched.current)
+    if (value && !touched.current && !context?.city)
       setForm((current) => ({
         ...current,
         city: value.city,
@@ -79,13 +92,15 @@ function AddContent({ session }: { session: Session | null }) {
     params.longitude,
     params.locationKey,
   ].join(":");
-  const [pointDraft, setPointDraft] = useState<{
-    key: string;
-    point?: MapPoint;
-  }>();
-  const point = pointDraft?.key === locationKey ? pointDraft.point : routePoint;
+  const [location, setLocation] = useState<{ key: string; point?: MapPoint }>({
+    key: locationKey,
+    point: routePoint,
+  });
+  if (!incoming && location.key !== locationKey)
+    setLocation({ key: locationKey, point: routePoint });
+  const point = location.point;
   const setPoint = (value?: MapPoint) =>
-    setPointDraft({ key: locationKey, point: value });
+    setLocation({ key: locationKey, point: value });
   const [isPublic, setPublic] = useState(false),
     [busy, setBusy] = useState(false),
     [locating, setLocating] = useState(false),
@@ -221,6 +236,48 @@ function AddContent({ session }: { session: Session | null }) {
       setBusy(false);
     }
   }
+  function applyContext() {
+    if (!context) return;
+    touched.current = true;
+    setHandledContext(context.key);
+    setForm({
+      ...blank,
+      name: context.name ?? "",
+      city: context.city ?? "",
+      state: context.state ?? "",
+    });
+    setPoint(undefined);
+    setStep(0);
+    setCreated("");
+    setPublic(false);
+    setDuplicates(null);
+    setError(undefined);
+    setPhoto(null);
+    setPhotoSent(false);
+  }
+  if (session && incoming)
+    return (
+      <Screen>
+        <AppHeader title="Cadastrar um lugar" />
+        <WarmIntro
+          title="Recebemos os dados da sua busca."
+          body={`Novo cadastro${context.city ? ` em ${context.city}, ${context.state}` : ""}${context.name ? `: ${context.name}` : ""}. Você pode continuar o cadastro anterior ou começar este. Começar outro descarta os textos e a foto ainda não enviados.`}
+        />
+        <PrimaryButton
+          title="Começar cadastro desta busca"
+          disabled={busy || locating || picking}
+          onPress={applyContext}
+        />
+        <QuietButton
+          title="Continuar meu cadastro anterior"
+          disabled={busy || locating || picking}
+          onPress={() => {
+            setHandledContext(context.key);
+            setLocation((current) => ({ ...current, key: locationKey }));
+          }}
+        />
+      </Screen>
+    );
   if (!session)
     return (
       <Screen>
