@@ -332,7 +332,7 @@ export default function MapPage() {
                 style={{
                   position: "absolute",
                   left: 10,
-                  right: 54,
+                  right: 68,
                   top: 12,
                   backgroundColor: "#FFFFFF",
                   borderRadius: 14,
@@ -343,7 +343,9 @@ export default function MapPage() {
                 }}
               >
                 <Text style={[m.small, { color: "#0F766E", flex: 1 }]}>
-                  Toque em um pin verde para conhecer um lugar da comunidade.
+                  {items.length
+                    ? "Toque em um pin verde para conhecer um lugar da comunidade."
+                    : "Explore as ruas e aproxime com +. Os pins verdes aparecem quando há cadastros NA REAL aprovados com posição."}
                 </Text>
               </View>
             ))}
@@ -382,7 +384,7 @@ export default function MapPage() {
             </Text>
             <Text style={m.small}>
               {builtInMap
-                ? "Os outros comércios e pontos são do mapa do seu celular. Aproxime para explorar; a cobertura varia por região."
+                ? "Aproxime com + para explorar os comércios disponíveis no Apple Maps. A cobertura varia por região."
                 : "As ruas e os pontos do mapa são do provedor. As descobertas da comunidade aparecem nos pins verdes."}
             </Text>
           </View>
@@ -461,7 +463,7 @@ export default function MapPage() {
           )}
           {q.isFetching && <Copy>Buscando descobertas da comunidade…</Copy>}
           {mapAvailable && q.data && items.length === 0 && (
-            <EmptyState text="Esta região ainda tem histórias para descobrir. Compartilhe um lugar que você conhece; os outros comércios do mapa aparecem conforme a cobertura do provedor." />
+            <EmptyState text="Ainda não há cadastros NA REAL nesta busca. Isso não significa que a cidade não tenha comércios. Os pontos do mapa são independentes; você pode cadastrar manualmente um lugar para revisão." />
           )}
           {q.hasNextPage && (
             <QuietButton

@@ -1,6 +1,6 @@
 import { View, Pressable, Text } from "react-native";
 import { ModerationPhoto } from "../components/moderation-photo";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Screen,
@@ -12,9 +12,17 @@ import {
   ErrorState,
 } from "../components/ui";
 import { AppHeader, StatusChip } from "../components/design";
+import { router } from "expo-router";
+import { useSession } from "../hooks/use-session";
+import { GentleNote, QuietButton, m } from "../components/member-design";
+import { moderationPreview } from "../validation/moderation-preview";
 import { db } from "../services/supabase";
 export default function Admin() {
   const qc = useQueryClient();
+  const session = useSession();
+  const lock = useRef(false);
+  const [queueType, setQueueType] = useState("places");
+  const [notice, setNotice] = useState("");
   const [page, setPage] = useState(0);
   const [state, setState] = useState("pending");
   const pageSize = 25;
@@ -23,7 +31,8 @@ export default function Admin() {
   const [error, setError] = useState<unknown>();
   const [busy, setBusy] = useState(false);
   const q = useQuery({
-    queryKey: ["admin-queue", state, page],
+    queryKey: ["admin-queue", session?.user.id, state, page, queueType],
+    enabled: Boolean(session),
     queryFn: async () => {
       const a = await db().rpc("safe_is_admin");
       if (a.error) throw a.error;
@@ -38,6 +47,8 @@ export default function Admin() {
         .order("created_at", { ascending: false })
         .order("id", { ascending: false });
       if (state !== "all") queueQuery = queueQuery.eq("state", state);
+      if (queueType !== "all")
+        queueQuery = queueQuery.eq("target_type", queueType);
       const queue = await queueQuery.range(
         page * pageSize,
         page * pageSize + pageSize - 1,
@@ -90,22 +101,47 @@ export default function Admin() {
     },
   });
   async function decide(item: string, decision: string) {
+    if (lock.current) return;
+    lock.current = true;
+    setNotice("");
     setBusy(true);
     setError(undefined);
     try {
       const r = await db().rpc("moderate_content", { item, decision, reason });
       if (r.error) throw r.error;
+      if (r.data !== true) {
+        await qc.invalidateQueries({ queryKey: ["admin-queue"] });
+        throw new Error(
+          "Este conteúdo mudou. Atualize a fila e revise a versão atual antes de decidir.",
+        );
+      }
+      setReason("");
+      setNotice(
+        "Decisão registrada. A lista da comunidade será atualizada conforme o resultado da revisão.",
+      );
       await qc.invalidateQueries();
     } catch (e) {
       setError(e);
     } finally {
+      lock.current = false;
       setBusy(false);
     }
   }
   return (
-    <Screen>
+    <Screen
+      onRefresh={session ? () => void q.refetch() : undefined}
+      refreshing={q.isRefetching}
+    >
       <AppHeader title="NA REAL Safe" back />
-      {q.isError ? (
+      {!session ? (
+        <>
+          <Copy>Entre com a conta de moderador para revisar os cadastros.</Copy>
+          <PrimaryButton
+            title="Entrar para revisar"
+            onPress={() => router.push("/auth")}
+          />
+        </>
+      ) : q.isError ? (
         <ErrorState error={q.error} />
       ) : q.isPending ? (
         <Copy>Verificando acesso…</Copy>
@@ -116,6 +152,43 @@ export default function Admin() {
             mídia sem verificar o arquivo. As decisões registram autor, versão e
             motivo.
           </Copy>
+          <GentleNote>
+            Novos lugares aguardam aprovação humana. A IA pode ajudar na
+            triagem, mas não comprova endereço, existência ou funcionamento de
+            um estabelecimento.
+          </GentleNote>
+          {notice !== "" && <GentleNote>{notice}</GentleNote>}
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            {[
+              ["places", "Lugares"],
+              ["all", "Toda a comunidade"],
+            ].map(([value, label]) => (
+              <Pressable
+                key={value}
+                accessibilityRole="button"
+                accessibilityLabel={label}
+                aria-pressed={queueType === value}
+                disabled={busy}
+                onPress={() => {
+                  setQueueType(value);
+                  setPage(0);
+                }}
+                style={{
+                  padding: 12,
+                  minHeight: 44,
+                  borderRadius: 16,
+                  backgroundColor: queueType === value ? "#D1FAE5" : "#F1F5F9",
+                }}
+              >
+                <Text style={m.label}>{label}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <QuietButton
+            title="Atualizar fila"
+            disabled={busy || q.isFetching}
+            onPress={() => void q.refetch()}
+          />
           <Field
             label="Motivo da decisão (obrigatório)"
             value={reason}
@@ -123,10 +196,11 @@ export default function Admin() {
             maxLength={1000}
           />
           <PrimaryButton
-            title="Executar lote de análise IA configurada"
+            title="Executar triagem IA configurada"
             disabled={busy}
             onPress={async () => {
               setBusy(true);
+              setNotice("");
               setError(undefined);
               try {
                 const r = await db().functions.invoke("moderate-pending", {
@@ -137,6 +211,9 @@ export default function Admin() {
                   throw new Error(
                     "Provedor de IA não configurado. Conteúdos permanecem pendentes.",
                   );
+                setNotice(
+                  `Triagem concluída: ${r.data.processed ?? 0} itens processados. Cadastros de lugares continuam sujeitos à aprovação humana.`,
+                );
                 await qc.invalidateQueries();
               } catch (e) {
                 setError(e);
@@ -179,7 +256,15 @@ export default function Admin() {
           )}
           {q.data.queue.map((i) => (
             <Card key={i.id}>
-              <Title>{i.target_type}</Title>
+              <Title>{moderationPreview(i.target_type, i.payload).title}</Title>
+              {moderationPreview(i.target_type, i.payload).fields.map(
+                (field) => (
+                  <View key={field.label} style={{ gap: 4 }}>
+                    <Text style={m.label}>{field.label}</Text>
+                    <Copy>{field.value}</Copy>
+                  </View>
+                ),
+              )}
               <StatusChip state={i.state} />
               <Copy>ID {i.target_id}</Copy>
               {i.target_type === "photos" && (
@@ -212,7 +297,7 @@ export default function Admin() {
                 !i.analysis?.categories?.["sexual/minors"] && (
                   <ModerationPhoto path={i.payload.object_path} />
                 )}
-              <Copy>{JSON.stringify(i.payload)}</Copy>
+
               <Copy>
                 Análise:{" "}
                 {i.analysis ? JSON.stringify(i.analysis) : "Não realizada"}
