@@ -20,6 +20,8 @@ Aplicativo React Native/Expo existente, ampliado na Fase 2. Continuidade atual: 
 
 **Cidade → mapa → cadastro:** seleção de cidade abre o mapa dentro do app, com pontos do mapa nativo e lista paginada da comunidade. Cadastro do que falta leva cidade/UF e preserva a escolha sobre um rascunho anterior. [Como funciona e limites de cobertura](docs/CIDADES_MAPA_CADASTRO.md).
 
+**Painel web exclusivo de moderação:** login com a conta atual, fila protegida e build separado do aplicativo. Use `npm run moderation:web` ou acesse o painel privado; veja [como entrar e liberar sua conta no Supabase](docs/PAINEL_WEB_MODERACAO.md).
+
 ## Desenvolvimento
 
 Node 24 e npm 11:

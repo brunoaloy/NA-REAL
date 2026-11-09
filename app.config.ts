@@ -17,6 +17,15 @@ export default function configure({ config }: ConfigContext): ExpoConfig {
     );
   const resolved: ExpoConfig = {
     ...config,
+    ...(process.env.NA_REAL_MODERATION_WEB === "1"
+      ? {
+          plugins: (config.plugins ?? []).map((plugin) =>
+            plugin === "expo-router"
+              ? ["expo-router", { root: "./moderation/app", sitemap: false }]
+              : plugin,
+          ) as ExpoConfig["plugins"],
+        }
+      : {}),
     name: config.name ?? "NA REAL",
     slug: config.slug ?? "na-real",
     ios: {

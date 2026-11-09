@@ -18,6 +18,9 @@ import { GentleNote, QuietButton, m } from "../components/member-design";
 import { moderationPreview } from "../validation/moderation-preview";
 import { db } from "../services/supabase";
 export default function Admin() {
+  return <ModerationPanel />;
+}
+export function ModerationPanel({ onSignOut }: { onSignOut?: () => void }) {
   const qc = useQueryClient();
   const session = useSession();
   const lock = useRef(false);
@@ -132,7 +135,13 @@ export default function Admin() {
       onRefresh={session ? () => void q.refetch() : undefined}
       refreshing={q.isRefetching}
     >
-      <AppHeader title="NA REAL Safe" back />
+      <AppHeader
+        title={onSignOut ? "Moderação NA REAL" : "NA REAL Safe"}
+        back={!onSignOut}
+      />
+      {onSignOut && (
+        <QuietButton title="Sair da moderação" onPress={onSignOut} />
+      )}
       {!session ? (
         <>
           <Copy>Entre com a conta de moderador para revisar os cadastros.</Copy>

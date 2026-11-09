@@ -91,7 +91,9 @@
     "auth-email:apply": "node --use-env-proxy scripts/auth-email-branding.cjs --apply",
     "test:readiness-ui": "node tests/readiness-smoke.cjs",
     "test:city-ui": "node tests/city-discovery-smoke.cjs",
-    "test:moderation-ui": "node tests/moderation-smoke.cjs"
+    "test:moderation-ui": "node tests/moderation-smoke.cjs",
+    "moderation:web": "node scripts/moderation-web.cjs",
+    "moderation:build": "node scripts/moderation-web.cjs --build"
   },
   "private": true
 }
