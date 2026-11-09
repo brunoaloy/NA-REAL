@@ -59,6 +59,16 @@ const { readEnvironment } = require("../scripts/setup-mobile.cjs");
         const u = new URL(r.request().url());
         let data = [];
         let headers = {};
+        if (
+          u.pathname.startsWith("/functions/v1/") &&
+          r.request().method() === "GET"
+        ) {
+          await r.fulfill({
+            status: 405,
+            json: { error: "Method not allowed" },
+          });
+          return;
+        }
         if (u.pathname === "/auth/v1/user") data = user;
         else if (u.pathname === "/rest/v1/rpc/safe_is_admin")
           data = mode === "moderator";
@@ -140,8 +150,11 @@ const { readEnvironment } = require("../scripts/setup-mobile.cjs");
         );
         assert.equal(decisions, 1);
         await page
+          .getByRole("button", { name: "Ferramentas", exact: true })
+          .click();
+        await page
           .getByRole("button", {
-            name: "Executar triagem IA configurada",
+            name: "Analisar contribuições com IA",
             exact: true,
           })
           .click();
@@ -151,10 +164,13 @@ const { readEnvironment } = require("../scripts/setup-mobile.cjs");
         assert.equal(triages, 1);
         assert.equal(pending, true);
         result = true;
+        await page
+          .getByRole("button", { name: "Cadastros", exact: true })
+          .click();
         await approve.click();
         await page.getByText("Decisão registrada.", { exact: false }).waitFor();
         await page
-          .getByText("Nenhum conteúdo nesta página.", { exact: true })
+          .getByText("Nenhum conteúdo nesta página.", { exact: false })
           .waitFor();
         assert.equal(decisions, 2);
         assert.equal(pending, false);

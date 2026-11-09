@@ -1,3 +1,4 @@
+import { fonts } from "../theme/fonts";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { PropsWithChildren, ComponentProps } from "react";
@@ -126,27 +127,27 @@ export function ProfileCover({ children }: PropsWithChildren) {
 export const m = StyleSheet.create({
   intro: { gap: 8, paddingVertical: 5 },
   eyebrow: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: fonts.semibold,
     fontSize: 9,
     letterSpacing: 1.6,
     color: colors.primary,
   },
   heading: {
-    fontFamily: "Inter_700Bold",
+    fontFamily: fonts.bold,
     fontSize: 27,
     lineHeight: 34,
     letterSpacing: -0.8,
     color: "#173C35",
   },
   body: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 22,
     color: colors.muted,
   },
-  label: { fontFamily: "Inter_600SemiBold", fontSize: 14, color: colors.text },
+  label: { fontFamily: fonts.semibold, fontSize: 14, color: colors.text },
   small: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
     color: colors.muted,
@@ -180,7 +181,7 @@ export const m = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   quietText: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: fonts.semibold,
     fontSize: 13,
     color: colors.primary,
   },
@@ -202,5 +203,5 @@ export const m = StyleSheet.create({
     backgroundColor: colors.surface,
     overflow: "hidden",
   },
-  section: { fontFamily: "Inter_700Bold", fontSize: 18, color: colors.text },
+  section: { fontFamily: fonts.bold, fontSize: 18, color: colors.text },
 });

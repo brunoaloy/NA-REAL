@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
-import { Brand, AuthButton, AuthField } from "./auth-design";
-import { Card, Copy, ErrorState, Screen, Title } from "./ui";
+import { Brand, AuthButton, AuthField, AuthShell, styles } from "./auth-design";
+import { Copy, ErrorState } from "./ui";
 import { GentleNote, QuietButton, m } from "./member-design";
 import { ModerationPanel } from "../app/admin";
 import { useSession } from "../hooks/use-session";
@@ -70,18 +70,18 @@ export default function ModerationPortal() {
     );
   }
   return (
-    <Screen>
-      <View style={{ paddingTop: 36, paddingBottom: 12 }}>
+    <AuthShell hideBack>
+      <View style={{ alignItems: "center", paddingTop: 48 }}>
         <Brand />
       </View>
-      <Text style={m.eyebrow}>CUIDADO COM A COMUNIDADE</Text>
-      <Title>Um lugar para cuidar de cada descoberta.</Title>
-      <Copy>
-        Revise novos lugares, fotos e contribuições com atenção. Seu cuidado
-        ajuda a manter o NA REAL acolhedor e confiável.
-      </Copy>
-      <Card>
-        <Title>Moderação</Title>
+      <Text style={styles.heading}>Cuidar também é descobrir.</Text>
+      <Text style={styles.subtitle}>
+        O mesmo NA REAL. Um espaço para revisar as descobertas da comunidade.
+      </Text>
+      <View style={styles.form}>
+        <Text style={[styles.label, { textAlign: "center", color: "#0F766E" }]}>
+          PAINEL DE MODERAÇÃO
+        </Text>
         {!configured ? (
           <GentleNote>
             O painel ainda precisa da conexão com o NA REAL. Configure a URL e a
@@ -151,10 +151,10 @@ export default function ModerationPortal() {
           </>
         )}
         {error != null && <ErrorState error={error} />}
-      </Card>
+      </View>
       <Text style={m.small}>
         Acesso reservado à equipe de moderação do NA REAL.
       </Text>
-    </Screen>
+    </AuthShell>
   );
 }

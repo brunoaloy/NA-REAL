@@ -4,6 +4,28 @@ Painel privado: https://na-real-moderacao-bruno.brunoaloy-gruposetup.chatgpt.sit
 
 O proprietário escolheu usar sua conta atual do NA REAL. Não foi criada outra conta, enviada senha ou concedida permissão automaticamente. A entrada dedicada fica em `moderation/app` e reutiliza o painel existente e o mesmo Supabase.
 
+## Situação conferida em 09/11/2026
+
+Sua conta já foi liberada: a consulta real retornou `owner_moderator=true`. Não precisa repetir o SQL. A ausência dos serviços auxiliares é independente dessa permissão: GET e OPTIONS dos quatro endereços retornaram 404. A tentativa de publicar pelo ambiente foi recusada com HTTP 403 e `Missing required permission(s): edge_functions_write`.
+
+O painel usa o mesmo login, cores e componentes do aplicativo, com navegação por Cadastros, Pedidos e denúncias e Ferramentas. Cada contribuição tem seu próprio motivo de decisão; detalhes técnicos ficam recolhidos. A disponibilidade das funções é consultada por GET sem sessão/payload; ferramentas ausentes ficam desativadas. A verificação de disponibilidade não comprova a configuração da IA nem uma operação autenticada bem-sucedida.
+
+## Publicar os serviços que faltam
+
+No GitHub Desktop, faça Fetch/Pull de `codex/na-real-dev`. Abra um terminal na pasta do NA REAL e execute:
+
+```sh
+npx supabase login
+npm run moderation:deploy-services
+npm run moderation:services-check
+```
+
+Use seu login administrativo do Supabase no seu computador. O script usa a CLI 3 instalada pelo projeto, aponta explicitamente para NA REAL (`zcnfssihiqmbrlwvlsme`), publica somente `moderate-pending`, `prepare-photo`, `delete-photo` e `delete-account`, com bundle pela API, sem Docker, sem prune e sem alterar o banco ou executar decisões. Requer `edge_functions_write`. Não envie tokens ou senhas pelo chat.
+
+As funções validam a sessão no próprio handler (e o papel de moderador onde exigido); o deploy mantém `verify_jwt=false` como no TOML existente para permitir preflight e o fluxo de validação da aplicação. O CORS compartilhado agora aceita `x-client-info`, além de authorization/apikey/content-type, e declara POST/OPTIONS. Corrigir CORS no código local não publica as funções ausentes automaticamente.
+
+A checagem posterior espera GET 405 (método recusado pelo handler sem executar ação) e OPTIONS bem-sucedido com os cabeçalhos do SDK permitidos. Depois, abra Ferramentas e toque Conferir disponibilidade dos serviços. Sem `MODERATION_API_KEY` nos secrets do servidor, a IA ainda responderá que não foi configurada; lugares continuam com aprovação humana. Nenhuma chave de IA deve ir para o aplicativo.
+
 ## Liberar sua conta no Supabase
 
 1. Entre no [projeto NA REAL](https://supabase.com/dashboard/project/zcnfssihiqmbrlwvlsme) com sua conta de proprietário do Supabase.
@@ -15,7 +37,7 @@ Essa liberação é um registro na tabela `public.safe_admins`, protegida para c
 
 ## O que significa o ambiente somente leitura
 
-Em 09/11/2026, uma consulta autenticada com o token disponível neste ambiente retornou `supabase_read_only_user`, `transaction_read_only=on` e `owner_moderator=false`, mesmo pedindo `read_only=false`. Não há evidência de que todo o projeto esteja travado para escrita; a limitação observada é desta conexão administrativa. Dar permissão à sua conta em `safe_admins` não transforma o token deste ambiente em conexão de escrita.
+Na primeira conferência de 09/11/2026, uma consulta autenticada com o token disponível neste ambiente retornou `supabase_read_only_user`, `transaction_read_only=on` e `owner_moderator=false`, mesmo pedindo `read_only=false`. Não há evidência de que todo o projeto esteja travado para escrita; a limitação observada é desta conexão administrativa. Dar permissão à sua conta em `safe_admins` não transforma o token deste ambiente em conexão de escrita.
 
 Para executar a liberação agora, use o SQL Editor com uma conta Supabase que tenha acesso de escrita ao projeto (Owner/Admin ou papel apropriado). Se o SQL Editor também estiver restrito, peça ao proprietário da organização para conferir seu acesso em **Organization settings → Team**, incluindo o acesso ao projeto quando houver papéis por projeto.
 
@@ -50,6 +72,8 @@ Na entrada, informe e-mail e senha atuais. Conta sem permissão vê orientação
 
 ## Limites de validação
 
-O ambiente pode validar compilação web/iOS, tipos, lint e testes locais sem usar sua senha. Isso não comprova uma aprovação real: o papel da conta ainda precisa ser liberado no projeto. Não foi criada conta, alterada senha, enviado e-mail ou aprovado conteúdo real.
+O ambiente pode validar compilação web/iOS, tipos, lint e testes locais sem usar sua senha. Isso não comprova uma aprovação real com a sessão do proprietário. O papel já foi confirmado na conferência mais recente. Não foi criada conta, alterada senha, enviado e-mail ou aprovado conteúdo real.
 
 A publicação em Sites foi confirmada pela API de hospedagem. A prévia gerenciada falhou (`relay could not open browser port 4173`) e a abertura do endereço hospedado pela ferramenta de navegador falhou (`Browser Use could not read requirements`). Não foi substituída por outro caminho de automação. Aparência, login e aprovação no navegador do proprietário seguem para validação após liberar a conta. Os testes unitários cobrem a entrada somente para sessão com papel confirmado, incluindo rejeição de dados de papel em cache durante erro, carregamento ou saída.
+
+Na rodada de revisão do layout, passaram 69 testes unitários e Deno check das quatro funções, além de TypeScript/lint e bundles web/iOS. A chamada pública safe_is_admin retornou false; a tentativa de moderate_content sem sessão, usando referência nula sem registro real, foi negada com HTTP 401. Os smokes de interface foram atualizados, mas não executados nesta rodada: a prévia e o navegador gerenciados continuaram indisponíveis. O teste SQL local tentou iniciar PostGIS e falhou por espaço insuficiente, sem chegar às asserções. Não foi marcado como aprovado.

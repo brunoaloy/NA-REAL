@@ -1,10 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.119.0";
-export const headers = {
-  "Content-Type": "application/json",
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, apikey, content-type, x-worker-token",
-};
+import { headers } from "./cors.ts";
+export { headers } from "./cors.ts";
 export function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), { status, headers });
 }

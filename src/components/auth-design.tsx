@@ -1,3 +1,4 @@
+import { fonts } from "../theme/fonts";
 import { useState, type PropsWithChildren } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -66,7 +67,8 @@ export function Brand({
 export function AuthShell({
   children,
   onBack,
-}: PropsWithChildren<{ onBack?: () => void }>) {
+  hideBack = false,
+}: PropsWithChildren<{ onBack?: () => void; hideBack?: boolean }>) {
   const focused = useIsFocused();
   return (
     <SafeAreaView style={styles.page}>
@@ -80,21 +82,27 @@ export function AuthShell({
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
         >
-          <View style={styles.navigation}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Voltar"
-              hitSlop={8}
-              onPress={
-                onBack ??
-                (() =>
-                  router.canGoBack() ? router.back() : router.replace("/"))
-              }
-              style={styles.back}
-            >
-              <Ionicons name="chevron-back" size={25} color={authColors.dark} />
-            </Pressable>
-          </View>
+          {!hideBack && (
+            <View style={styles.navigation}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Voltar"
+                hitSlop={8}
+                onPress={
+                  onBack ??
+                  (() =>
+                    router.canGoBack() ? router.back() : router.replace("/"))
+                }
+                style={styles.back}
+              >
+                <Ionicons
+                  name="chevron-back"
+                  size={25}
+                  color={authColors.dark}
+                />
+              </Pressable>
+            </View>
+          )}
           <View style={styles.content}>{children}</View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -211,7 +219,7 @@ export const styles = StyleSheet.create({
   content: { flex: 1, width: "100%", maxWidth: 430, alignSelf: "center" },
   brand: { alignItems: "center", gap: 0 },
   wordmark: {
-    fontFamily: "Inter_700Bold",
+    fontFamily: fonts.bold,
     fontSize: 38,
     lineHeight: 46,
     letterSpacing: -1.5,
@@ -227,7 +235,7 @@ export const styles = StyleSheet.create({
     transform: [{ rotate: "-25deg" }],
   },
   heading: {
-    fontFamily: "Inter_700Bold",
+    fontFamily: fonts.bold,
     fontSize: 26,
     lineHeight: 33,
     letterSpacing: -0.9,
@@ -236,7 +244,7 @@ export const styles = StyleSheet.create({
     marginTop: 23,
   },
   subtitle: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 21,
     textAlign: "center",
@@ -246,7 +254,7 @@ export const styles = StyleSheet.create({
   form: { gap: 17, marginTop: 28 },
   field: { gap: 8 },
   label: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: fonts.semibold,
     fontSize: 13,
     color: authColors.text,
   },
@@ -266,7 +274,7 @@ export const styles = StyleSheet.create({
     minWidth: 0,
     paddingVertical: 14,
     paddingRight: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.regular,
     fontSize: 14,
     color: authColors.text,
   },
@@ -287,12 +295,12 @@ export const styles = StyleSheet.create({
     gap: 10,
   },
   buttonText: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: fonts.semibold,
     fontSize: 16,
     color: "#FFFFFF",
   },
   link: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: fonts.semibold,
     color: authColors.teal,
     fontSize: 13,
   },
@@ -303,14 +311,14 @@ export const styles = StyleSheet.create({
     minHeight: 48,
   },
   switchText: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 22,
     textAlign: "center",
     color: authColors.text,
   },
   helper: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 17,
     color: authColors.muted,
@@ -325,13 +333,13 @@ export const styles = StyleSheet.create({
   },
   noticeText: {
     flex: 1,
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 19,
     color: authColors.dark,
   },
   error: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.regular,
     fontSize: 13,
     lineHeight: 20,
     color: "#B42318",
@@ -340,7 +348,7 @@ export const styles = StyleSheet.create({
     borderRadius: 12,
   },
   footer: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.regular,
     fontSize: 11,
     lineHeight: 18,
     color: authColors.muted,

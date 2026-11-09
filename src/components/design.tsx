@@ -1,3 +1,4 @@
+import { fonts } from "../theme/fonts";
 import { Pressable, View, Text, ScrollView, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -37,7 +38,7 @@ export function AppHeader({
           style={{
             fontSize: back ? 20 : title === "na real." ? 28 : 22,
             flexShrink: 1,
-            fontFamily: "Inter_700Bold",
+            fontFamily: fonts.bold,
             color: colors.primary,
           }}
         >
@@ -160,7 +161,7 @@ export function RatingStars({
       />
       <Text
         style={{
-          fontFamily: "Inter_600SemiBold",
+          fontFamily: fonts.semibold,
           fontSize: 12,
           color: colors.muted,
         }}
@@ -189,7 +190,7 @@ export function PlaceCard({
     <View style={{ flex: 1, gap: 8, minWidth: 0 }}>
       <Text
         style={{
-          fontFamily: "Inter_600SemiBold",
+          fontFamily: fonts.semibold,
           fontSize: 10,
           letterSpacing: 1.1,
           color: colors.primary,
@@ -199,7 +200,7 @@ export function PlaceCard({
       </Text>
       <Text
         style={{
-          fontFamily: "Inter_700Bold",
+          fontFamily: fonts.bold,
           fontSize: preview ? 18 : 21,
           letterSpacing: -0.4,
           color: colors.text,
@@ -209,7 +210,7 @@ export function PlaceCard({
       </Text>
       <Text
         style={{
-          fontFamily: "Inter_400Regular",
+          fontFamily: fonts.regular,
           fontSize: 12,
           lineHeight: 18,
           color: colors.muted,
@@ -263,7 +264,7 @@ export function PlaceCard({
           <Text
             style={{
               color: "white",
-              fontFamily: "Inter_600SemiBold",
+              fontFamily: fonts.semibold,
               fontSize: 14,
             }}
           >
@@ -328,7 +329,7 @@ export function PlaceCard({
           <Ionicons name="map-outline" size={16} color={colors.primary} />
           <Text
             style={{
-              fontFamily: "Inter_600SemiBold",
+              fontFamily: fonts.semibold,
               fontSize: 12,
               color: colors.primary,
             }}
@@ -409,7 +410,7 @@ export function SearchBar({
           flex: 1,
           minWidth: 0,
           paddingVertical: 14,
-          fontFamily: "Inter_400Regular",
+          fontFamily: fonts.regular,
           fontSize: 14,
           color: colors.text,
         }}
@@ -483,7 +484,7 @@ export function DiscoveryHero({
           numberOfLines={2}
           style={{
             flexShrink: 1,
-            fontFamily: "Inter_600SemiBold",
+            fontFamily: fonts.semibold,
             fontSize: 12,
             color: colors.primary,
           }}
@@ -499,7 +500,7 @@ export function DiscoveryHero({
       <Text
         accessibilityRole="header"
         style={{
-          fontFamily: "Inter_700Bold",
+          fontFamily: fonts.bold,
           fontSize: 31,
           lineHeight: 38,
           letterSpacing: -1,
@@ -510,7 +511,7 @@ export function DiscoveryHero({
       </Text>
       <Text
         style={{
-          fontFamily: "Inter_400Regular",
+          fontFamily: fonts.regular,
           fontSize: 14,
           lineHeight: 22,
           color: colors.muted,

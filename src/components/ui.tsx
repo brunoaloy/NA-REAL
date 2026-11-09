@@ -1,3 +1,4 @@
+import { fonts } from "../theme/fonts";
 import { LinearGradient } from "expo-linear-gradient";
 import { errorMessage } from "../validation/errors";
 import { OfflineBanner } from "./connectivity";
@@ -174,7 +175,7 @@ export function EmptyState({
           >
             <Text
               style={{
-                fontFamily: "Inter_600SemiBold",
+                fontFamily: fonts.semibold,
                 color: colors.primary,
                 fontSize: 13,
               }}
@@ -189,7 +190,18 @@ export function EmptyState({
 }
 export function ErrorState({ error }: { error: unknown }) {
   return (
-    <Text accessibilityRole="alert" style={{ color: "#B91C1C" }}>
+    <Text
+      accessibilityRole="alert"
+      style={{
+        color: "#B91C1C",
+        fontFamily: fonts.regular,
+        fontSize: 14,
+        lineHeight: 21,
+        padding: 12,
+        borderRadius: 12,
+        backgroundColor: "#FFF2EF",
+      }}
+    >
       {errorMessage(error)}
     </Text>
   );
@@ -203,11 +215,11 @@ export const s = StyleSheet.create({
     gap: 18,
     paddingBottom: 40,
   },
-  title: { fontSize: 24, fontFamily: "Inter_700Bold", color: colors.primary },
+  title: { fontSize: 24, fontFamily: fonts.bold, color: colors.primary },
   copy: {
     fontSize: 15,
     lineHeight: 23,
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.regular,
     color: colors.text,
   },
   card: {
@@ -231,9 +243,9 @@ export const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  buttonText: { fontFamily: "Inter_600SemiBold", color: "white", fontSize: 15 },
+  buttonText: { fontFamily: fonts.semibold, color: "white", fontSize: 15 },
   fieldLabel: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: fonts.semibold,
     fontSize: 13,
     color: colors.text,
   },
@@ -244,7 +256,7 @@ export const s = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     color: colors.text,
-    fontFamily: "Inter_400Regular",
+    fontFamily: fonts.regular,
     fontSize: 14,
     minHeight: 50,
   },

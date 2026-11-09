@@ -14,8 +14,14 @@ import {
 import { AppHeader, StatusChip } from "../components/design";
 import { router } from "expo-router";
 import { useSession } from "../hooks/use-session";
-import { GentleNote, QuietButton, m } from "../components/member-design";
+import {
+  GentleNote,
+  QuietButton,
+  ProfileCover,
+  m,
+} from "../components/member-design";
 import { moderationPreview } from "../validation/moderation-preview";
+import { moderationServices } from "../services/moderation-health";
 import { db } from "../services/supabase";
 export default function Admin() {
   return <ModerationPanel />;
@@ -24,6 +30,16 @@ export function ModerationPanel({ onSignOut }: { onSignOut?: () => void }) {
   const qc = useQueryClient();
   const session = useSession();
   const lock = useRef(false);
+  const [section, setSection] = useState("queue");
+  const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [details, setDetails] = useState<Record<string, boolean>>({});
+  const services = useQuery({
+    queryKey: ["moderation-services", session?.user.id],
+    enabled: Boolean(session),
+    queryFn: moderationServices,
+    staleTime: 60000,
+    retry: false,
+  });
   const [queueType, setQueueType] = useState("places");
   const [notice, setNotice] = useState("");
   const [page, setPage] = useState(0);
@@ -103,14 +119,18 @@ export function ModerationPanel({ onSignOut }: { onSignOut?: () => void }) {
       };
     },
   });
-  async function decide(item: string, decision: string) {
+  async function decide(item: string, decision: string, itemReason: string) {
     if (lock.current) return;
     lock.current = true;
     setNotice("");
     setBusy(true);
     setError(undefined);
     try {
-      const r = await db().rpc("moderate_content", { item, decision, reason });
+      const r = await db().rpc("moderate_content", {
+        item,
+        decision,
+        reason: itemReason.trim(),
+      });
       if (r.error) throw r.error;
       if (r.data !== true) {
         await qc.invalidateQueries({ queryKey: ["admin-queue"] });
@@ -118,7 +138,7 @@ export function ModerationPanel({ onSignOut }: { onSignOut?: () => void }) {
           "Este conteúdo mudou. Atualize a fila e revise a versão atual antes de decidir.",
         );
       }
-      setReason("");
+      setReasons((v) => ({ ...v, [item]: "" }));
       setNotice(
         "Decisão registrada. A lista da comunidade será atualizada conforme o resultado da revisão.",
       );
@@ -135,10 +155,7 @@ export function ModerationPanel({ onSignOut }: { onSignOut?: () => void }) {
       onRefresh={session ? () => void q.refetch() : undefined}
       refreshing={q.isRefetching}
     >
-      <AppHeader
-        title={onSignOut ? "Moderação NA REAL" : "NA REAL Safe"}
-        back={!onSignOut}
-      />
+      <AppHeader title="na real." back={!onSignOut} />
       {onSignOut && (
         <QuietButton title="Sair da moderação" onPress={onSignOut} />
       )}
@@ -151,218 +168,360 @@ export function ModerationPanel({ onSignOut }: { onSignOut?: () => void }) {
           />
         </>
       ) : q.isError ? (
-        <ErrorState error={q.error} />
+        <>
+          <ErrorState error={q.error} />
+          <QuietButton
+            title="Tentar carregar novamente"
+            onPress={() => void q.refetch()}
+          />
+        </>
       ) : q.isPending ? (
         <Copy>Verificando acesso…</Copy>
       ) : (
         <>
-          <Copy>
-            Revisão humana. Não aprove dados pessoais, residências privadas ou
-            mídia sem verificar o arquivo. As decisões registram autor, versão e
-            motivo.
-          </Copy>
-          <GentleNote>
-            Novos lugares aguardam aprovação humana. A IA pode ajudar na
-            triagem, mas não comprova endereço, existência ou funcionamento de
-            um estabelecimento.
-          </GentleNote>
-          {notice !== "" && <GentleNote>{notice}</GentleNote>}
-          <View style={{ flexDirection: "row", gap: 8 }}>
+          <ProfileCover>
+            <Text style={m.eyebrow}>MODERAÇÃO</Text>
+            <Title>Vamos cuidar das próximas descobertas?</Title>
+            <Copy>
+              Confira cada lugar antes de compartilhar com a comunidade. Fotos e
+              outras contribuições também passam por revisão.
+            </Copy>
+          </ProfileCover>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {[
-              ["places", "Lugares"],
-              ["all", "Toda a comunidade"],
+              ["queue", "Cadastros"],
+              ["reports", "Pedidos e denúncias"],
+              ["tools", "Ferramentas"],
             ].map(([value, label]) => (
               <Pressable
                 key={value}
                 accessibilityRole="button"
                 accessibilityLabel={label}
-                aria-pressed={queueType === value}
+                accessibilityState={{ selected: section === value }}
                 disabled={busy}
                 onPress={() => {
-                  setQueueType(value);
-                  setPage(0);
+                  setSection(value);
+                  setError(undefined);
+                  setNotice("");
                 }}
                 style={{
                   padding: 12,
                   minHeight: 44,
                   borderRadius: 16,
-                  backgroundColor: queueType === value ? "#D1FAE5" : "#F1F5F9",
+                  backgroundColor: section === value ? "#D1FAE5" : "#FFFFFF",
+                  borderWidth: 1,
+                  borderColor: "#DFE9E3",
                 }}
               >
                 <Text style={m.label}>{label}</Text>
               </Pressable>
             ))}
           </View>
-          <QuietButton
-            title="Atualizar fila"
-            disabled={busy || q.isFetching}
-            onPress={() => void q.refetch()}
-          />
-          <Field
-            label="Motivo da decisão (obrigatório)"
-            value={reason}
-            onChangeText={setReason}
-            maxLength={1000}
-          />
-          <PrimaryButton
-            title="Executar triagem IA configurada"
-            disabled={busy}
-            onPress={async () => {
-              setBusy(true);
-              setNotice("");
-              setError(undefined);
-              try {
-                const r = await db().functions.invoke("moderate-pending", {
-                  body: {},
-                });
-                if (r.error) throw r.error;
-                if (r.data.status === "not_configured")
-                  throw new Error(
-                    "Provedor de IA não configurado. Conteúdos permanecem pendentes.",
-                  );
-                setNotice(
-                  `Triagem concluída: ${r.data.processed ?? 0} itens processados. Cadastros de lugares continuam sujeitos à aprovação humana.`,
-                );
-                await qc.invalidateQueries();
-              } catch (e) {
-                setError(e);
-              } finally {
-                setBusy(false);
-              }
-            }}
-          />
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {[
-              ["pending", "Pendentes"],
-              ["approved", "Aprovados"],
-              ["rejected", "Rejeitados"],
-              ["removed", "Removidos"],
-              ["all", "Todos"],
-            ].map(([value, label]) => (
-              <Pressable
-                key={value}
-                accessibilityRole="button"
-                accessibilityState={{ selected: state === value }}
-                onPress={() => {
-                  setState(value);
-                  setPage(0);
-                }}
-                style={{
-                  padding: 12,
-                  borderRadius: 18,
-                  backgroundColor: state === value ? "#D1FAE5" : "#F1F5F9",
-                }}
-              >
-                <Text>{label}</Text>
-              </Pressable>
-            ))}
-          </View>
-          <Copy>
-            {q.data.queueCount} itens neste filtro • página {page + 1}
-          </Copy>
-          {q.data.queue.length === 0 && (
-            <Copy>Nenhum conteúdo nesta página.</Copy>
-          )}
-          {q.data.queue.map((i) => (
-            <Card key={i.id}>
-              <Title>{moderationPreview(i.target_type, i.payload).title}</Title>
-              {moderationPreview(i.target_type, i.payload).fields.map(
-                (field) => (
-                  <View key={field.label} style={{ gap: 4 }}>
-                    <Text style={m.label}>{field.label}</Text>
-                    <Copy>{field.value}</Copy>
-                  </View>
-                ),
+          {error != null && <ErrorState error={error} />}
+          {notice !== "" && <GentleNote>{notice}</GentleNote>}
+          {section === "queue" && (
+            <>
+              <Title>Cadastros e contribuições</Title>
+              <Copy>
+                Escolha um item, confira os dados e escreva o motivo antes de
+                decidir. Lugares aprovados aparecem no catálogo; o pin depende
+                da posição cadastrada.
+              </Copy>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                {[
+                  ["places", "Lugares"],
+                  ["all", "Toda a comunidade"],
+                ].map(([value, label]) => (
+                  <Pressable
+                    key={value}
+                    accessibilityRole="button"
+                    accessibilityLabel={label}
+                    aria-pressed={queueType === value}
+                    disabled={busy}
+                    onPress={() => {
+                      setQueueType(value);
+                      setPage(0);
+                    }}
+                    style={{
+                      padding: 12,
+                      minHeight: 44,
+                      borderRadius: 16,
+                      backgroundColor:
+                        queueType === value ? "#D1FAE5" : "#F1F5F9",
+                    }}
+                  >
+                    <Text style={m.label}>{label}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              <QuietButton
+                title="Atualizar fila"
+                disabled={busy || q.isFetching}
+                onPress={() => void q.refetch()}
+              />
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {[
+                  ["pending", "Pendentes"],
+                  ["approved", "Aprovados"],
+                  ["rejected", "Rejeitados"],
+                  ["removed", "Removidos"],
+                  ["all", "Todos"],
+                ].map(([value, label]) => (
+                  <Pressable
+                    key={value}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: state === value }}
+                    onPress={() => {
+                      setState(value);
+                      setPage(0);
+                    }}
+                    style={{
+                      padding: 12,
+                      borderRadius: 18,
+                      backgroundColor: state === value ? "#D1FAE5" : "#F1F5F9",
+                    }}
+                  >
+                    <Text style={m.label}>{label}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              <Copy>
+                {q.data.queueCount} itens neste filtro • página {page + 1}
+              </Copy>
+              {q.data.queue.length === 0 && (
+                <GentleNote>
+                  Nenhum conteúdo nesta página. Quando houver novos envios, eles
+                  aparecerão aqui para você revisar.
+                </GentleNote>
               )}
-              <StatusChip state={i.state} />
-              <Copy>ID {i.target_id}</Copy>
-              {i.target_type === "photos" && (
-                <PrimaryButton
-                  title="Preparar imagem sem metadados para revisão"
-                  disabled={busy}
-                  onPress={async () => {
-                    setBusy(true);
-                    setError(undefined);
-                    try {
-                      const r = await db().functions.invoke("prepare-photo", {
-                        body: { id: i.target_id },
-                      });
-                      if (r.error) throw r.error;
-                      if (!r.data?.prepared)
-                        throw new Error("Preparação não confirmada");
-                      await qc.invalidateQueries({
-                        queryKey: ["moderation-photo"],
-                      });
-                    } catch (e) {
-                      setError(e);
-                    } finally {
-                      setBusy(false);
-                    }
-                  }}
-                />
-              )}
-              {i.target_type === "photos" &&
-                typeof i.payload.object_path === "string" &&
-                !i.analysis?.categories?.["sexual/minors"] && (
-                  <ModerationPhoto path={i.payload.object_path} />
-                )}
+              {q.data.queue.map((i) => (
+                <Card key={i.id}>
+                  <Title>
+                    {moderationPreview(i.target_type, i.payload).title}
+                  </Title>
+                  {moderationPreview(i.target_type, i.payload).fields.map(
+                    (field) => (
+                      <View key={field.label} style={{ gap: 4 }}>
+                        <Text style={m.label}>{field.label}</Text>
+                        <Copy>{field.value}</Copy>
+                      </View>
+                    ),
+                  )}
+                  <StatusChip state={i.state} />
 
-              <Copy>
-                Análise:{" "}
-                {i.analysis ? JSON.stringify(i.analysis) : "Não realizada"}
-              </Copy>
-              {["approved", "pending", "rejected", "removed"].map((d) => (
-                <PrimaryButton
-                  key={d}
-                  title={
-                    {
-                      approved: "Aprovar após revisão",
-                      pending: "Manter pendente",
-                      rejected: "Rejeitar",
-                      removed: "Remover",
-                    }[d]!
-                  }
-                  disabled={busy || reason.trim().length < 3}
-                  onPress={() => void decide(i.id, d)}
-                />
+                  {i.target_type === "photos" &&
+                    services.data?.photos !== "available" && (
+                      <GentleNote>
+                        O preparo de fotos ainda não está disponível. Mantenha a
+                        foto pendente até o serviço ser ativado.
+                      </GentleNote>
+                    )}
+                  {i.target_type === "photos" && (
+                    <PrimaryButton
+                      title="Preparar foto para revisão"
+                      disabled={busy || services.data?.photos !== "available"}
+                      onPress={async () => {
+                        setBusy(true);
+                        setError(undefined);
+                        try {
+                          const r = await db().functions.invoke(
+                            "prepare-photo",
+                            {
+                              body: { id: i.target_id },
+                            },
+                          );
+                          if (r.error) throw r.error;
+                          if (!r.data?.prepared)
+                            throw new Error("Preparação não confirmada");
+                          await qc.invalidateQueries({
+                            queryKey: ["moderation-photo"],
+                          });
+                        } catch (e) {
+                          setError(e);
+                        } finally {
+                          setBusy(false);
+                        }
+                      }}
+                    />
+                  )}
+                  {i.target_type === "photos" &&
+                    typeof i.payload.object_path === "string" &&
+                    !i.analysis?.categories?.["sexual/minors"] && (
+                      <ModerationPhoto path={i.payload.object_path} />
+                    )}
+
+                  <QuietButton
+                    title={
+                      details[i.id]
+                        ? "Ocultar detalhes da revisão"
+                        : "Ver detalhes da revisão"
+                    }
+                    onPress={() =>
+                      setDetails((v) => ({ ...v, [i.id]: !v[i.id] }))
+                    }
+                  />
+                  {details[i.id] && (
+                    <Copy>
+                      Referência: {i.target_id}. Análise:{" "}
+                      {i.analysis
+                        ? JSON.stringify(i.analysis)
+                        : "Não realizada"}
+                    </Copy>
+                  )}
+                  <Field
+                    label="Motivo da decisão (obrigatório)"
+                    placeholder="Ex.: endereço conferido e sem cadastro repetido"
+                    multiline
+                    value={reasons[i.id] ?? ""}
+                    onChangeText={(value) =>
+                      setReasons((v) => ({ ...v, [i.id]: value }))
+                    }
+                    maxLength={1000}
+                  />
+                  {["approved", "pending", "rejected", "removed"].map((d) => (
+                    <DecisionButton
+                      primary={d === "approved"}
+                      key={d}
+                      title={
+                        {
+                          approved: "Aprovar após revisão",
+                          pending: "Manter pendente",
+                          rejected: "Rejeitar",
+                          removed: "Remover",
+                        }[d]!
+                      }
+                      disabled={busy || (reasons[i.id] ?? "").trim().length < 3}
+                      onPress={() => void decide(i.id, d, reasons[i.id] ?? "")}
+                    />
+                  ))}
+                </Card>
               ))}
-            </Card>
-          ))}
-          <PrimaryButton
-            title="Página anterior da fila"
-            disabled={busy || page === 0}
-            onPress={() => setPage((p) => p - 1)}
-          />
-          <PrimaryButton
-            title="Próxima página da fila"
-            disabled={busy || (page + 1) * pageSize >= q.data.queueCount}
-            onPress={() => setPage((p) => p + 1)}
-          />
-          <Title>Correções de lugares</Title>
-          {q.data.suggestions.map((s) => (
-            <Card key={s.id}>
+              <PrimaryButton
+                title="Página anterior da fila"
+                disabled={busy || page === 0}
+                onPress={() => setPage((p) => p - 1)}
+              />
+              <PrimaryButton
+                title="Próxima página da fila"
+                disabled={busy || (page + 1) * pageSize >= q.data.queueCount}
+                onPress={() => setPage((p) => p + 1)}
+              />
+            </>
+          )}
+          {section === "reports" && (
+            <>
+              <Title>Pedidos e denúncias</Title>
               <Copy>
-                {s.place_id} • {s.field}
+                Revise os pedidos de correção e as mensagens recebidas antes de
+                tomar uma decisão.
               </Copy>
-              <Copy>{s.proposed_value}</Copy>
-              <Copy>{s.reason}</Copy>
-              {[true, false].map((approve) => (
+              <Field
+                label="Motivo da decisão (obrigatório)"
+                value={reason}
+                onChangeText={setReason}
+                maxLength={1000}
+              />
+              <Title>Correções de lugares</Title>
+              {q.data.suggestions.map((s) => (
+                <Card key={s.id}>
+                  <Copy>
+                    {s.place_id} • {s.field}
+                  </Copy>
+                  <Copy>{s.proposed_value}</Copy>
+                  <Copy>{s.reason}</Copy>
+                  {[true, false].map((approve) => (
+                    <PrimaryButton
+                      key={String(approve)}
+                      title={
+                        approve
+                          ? "Aplicar correção revisada"
+                          : "Rejeitar correção"
+                      }
+                      disabled={busy || reason.trim().length < 3}
+                      onPress={async () => {
+                        setBusy(true);
+                        setError(undefined);
+                        try {
+                          const r = await db().rpc("review_place_suggestion", {
+                            suggestion: s.id,
+                            approve,
+                            reason,
+                          });
+                          if (r.error) throw r.error;
+                          await qc.invalidateQueries();
+                        } catch (e) {
+                          setError(e);
+                        } finally {
+                          setBusy(false);
+                        }
+                      }}
+                    />
+                  ))}
+                </Card>
+              ))}
+              <Title>Denúncias</Title>
+              {q.data.reports.map((r) => (
+                <Card key={r.id}>
+                  <Copy>
+                    {r.target_type} · {r.target_id}
+                  </Copy>
+                  <Copy>{r.reason}</Copy>
+                </Card>
+              ))}
+              <Title>Recursos de suspensão</Title>
+              {q.data.accountAppeals.map((a) => (
+                <Card key={a.user_id}>
+                  <Copy>{a.user_id}</Copy>
+                  <Copy>{a.reason}</Copy>
+                </Card>
+              ))}
+              <Title>Contestações</Title>
+              {q.data.appeals.map((a) => (
+                <Card key={a.id}>
+                  <Copy>Item {a.item_id}</Copy>
+                  <Copy>{a.reason}</Copy>
+                </Card>
+              ))}
+            </>
+          )}
+          {section === "tools" && (
+            <>
+              <Title>Ferramentas da moderação</Title>
+              <Card>
+                <Title>Ajuda da IA</Title>
+                <Copy>
+                  A análise automática ajuda a identificar conteúdos que
+                  precisam de atenção. Novos lugares continuam dependendo da sua
+                  aprovação.
+                </Copy>
+                {services.data?.triage !== "available" && (
+                  <GentleNote>
+                    A análise automática ainda não está disponível. Você pode
+                    revisar lugares manualmente na aba Cadastros.
+                  </GentleNote>
+                )}
                 <PrimaryButton
-                  key={String(approve)}
-                  title={
-                    approve ? "Aplicar correção revisada" : "Rejeitar correção"
-                  }
-                  disabled={busy || reason.trim().length < 3}
+                  title="Analisar contribuições com IA"
+                  disabled={busy || services.data?.triage !== "available"}
                   onPress={async () => {
                     setBusy(true);
+                    setNotice("");
                     setError(undefined);
                     try {
-                      const r = await db().rpc("review_place_suggestion", {
-                        suggestion: s.id,
-                        approve,
-                        reason,
-                      });
+                      const r = await db().functions.invoke(
+                        "moderate-pending",
+                        {
+                          body: {},
+                        },
+                      );
                       if (r.error) throw r.error;
+                      if (r.data?.status === "not_configured")
+                        throw new Error(
+                          "Provedor de IA não configurado. Conteúdos permanecem pendentes.",
+                        );
+                      setNotice(
+                        `Triagem concluída: ${r.data?.processed ?? 0} itens processados. Cadastros de lugares continuam sujeitos à aprovação humana.`,
+                      );
                       await qc.invalidateQueries();
                     } catch (e) {
                       setError(e);
@@ -371,64 +530,71 @@ export function ModerationPanel({ onSignOut }: { onSignOut?: () => void }) {
                     }
                   }}
                 />
-              ))}
-            </Card>
-          ))}
-          <Title>Denúncias</Title>
-          {q.data.reports.map((r) => (
-            <Card key={r.id}>
-              <Copy>
-                {r.target_type} · {r.target_id}
-              </Copy>
-              <Copy>{r.reason}</Copy>
-            </Card>
-          ))}
-          <Title>Recursos de suspensão</Title>
-          {q.data.accountAppeals.map((a) => (
-            <Card key={a.user_id}>
-              <Copy>{a.user_id}</Copy>
-              <Copy>{a.reason}</Copy>
-            </Card>
-          ))}
-          <Title>Contestações</Title>
-          {q.data.appeals.map((a) => (
-            <Card key={a.id}>
-              <Copy>Item {a.item_id}</Copy>
-              <Copy>{a.reason}</Copy>
-            </Card>
-          ))}
-          <Field
-            label="UUID da conta para suspender/reintegrar"
-            value={target}
-            onChangeText={setTarget}
-          />
-          {[true, false].map((suspend) => (
-            <PrimaryButton
-              key={String(suspend)}
-              title={suspend ? "Suspender conta" : "Reintegrar conta"}
-              disabled={busy || !target || reason.length < 3}
-              onPress={async () => {
-                setError(undefined);
-                setBusy(true);
-                try {
-                  const r = await db().rpc("suspend_account", {
-                    target,
-                    suspend,
-                    reason,
-                  });
-                  if (r.error) throw r.error;
-                  await qc.invalidateQueries();
-                } catch (e) {
-                  setError(e);
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            />
-          ))}
+
+                <QuietButton
+                  title="Conferir disponibilidade dos serviços"
+                  disabled={services.isFetching}
+                  onPress={() => void services.refetch()}
+                />
+              </Card>
+              <Card>
+                <Title>Gerenciar uma conta</Title>
+                <Copy>
+                  Use esta área apenas para casos já revisados. Informe a
+                  referência da conta e o motivo da decisão.
+                </Copy>
+                <Field
+                  label="Motivo da decisão (obrigatório)"
+                  value={reason}
+                  onChangeText={setReason}
+                  maxLength={1000}
+                />
+                <Field
+                  label="UUID da conta para suspender/reintegrar"
+                  value={target}
+                  onChangeText={setTarget}
+                />
+                {[true, false].map((suspend) => (
+                  <PrimaryButton
+                    key={String(suspend)}
+                    title={suspend ? "Suspender conta" : "Reintegrar conta"}
+                    disabled={busy || !target || reason.length < 3}
+                    onPress={async () => {
+                      setError(undefined);
+                      setBusy(true);
+                      try {
+                        const r = await db().rpc("suspend_account", {
+                          target,
+                          suspend,
+                          reason,
+                        });
+                        if (r.error) throw r.error;
+                        await qc.invalidateQueries();
+                      } catch (e) {
+                        setError(e);
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                  />
+                ))}
+              </Card>
+            </>
+          )}
         </>
       )}
-      {error != null && <ErrorState error={error} />}
     </Screen>
   );
+}
+
+function DecisionButton({
+  primary,
+  ...props
+}: {
+  primary: boolean;
+  title: string;
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  return primary ? <PrimaryButton {...props} /> : <QuietButton {...props} />;
 }

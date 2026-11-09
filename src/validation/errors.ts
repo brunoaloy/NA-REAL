@@ -10,6 +10,15 @@ export function errorMessage(error: unknown): string {
           issues?: { path?: unknown[]; message?: string }[];
         })
       : undefined;
+  if (
+    item?.name === "FunctionsFetchError" ||
+    /Failed to send a request to the Edge Function/i.test(
+      String(item?.message ?? ""),
+    )
+  )
+    return "Não foi possível acessar este serviço. Tente novamente; a revisão manual de lugares continua disponível.";
+  if (item?.name === "FunctionsHttpError")
+    return "O serviço não concluiu esta ação. Nenhuma confirmação foi recebida; atualize a página antes de tentar novamente.";
   if (item?.name === "ZodError" && item.issues?.length) {
     const fields: Record<string, string> = {
       name: "nome",
