@@ -22,6 +22,8 @@ Aplicativo React Native/Expo existente, ampliado na Fase 2. Continuidade atual: 
 
 **Painel web exclusivo de moderação:** login com a conta atual, fila protegida e build separado do aplicativo. Use `npm run moderation:web` ou acesse o painel privado; veja [como entrar e liberar sua conta no Supabase](docs/PAINEL_WEB_MODERACAO.md).
 
+**Recomeçar o piloto com dois iPhones:** plano protegido de limpeza preservando login/moderação, configuração da IA e roteiro entre duas contas em [TESTE_DOIS_IPHONES.md](docs/TESTE_DOIS_IPHONES.md). A limpeza remota e a ativação da chave exigem as etapas desse guia; não são executadas automaticamente ao abrir o app.
+
 ## Desenvolvimento
 
 Node 24 e npm 11:

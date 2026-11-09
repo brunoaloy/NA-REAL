@@ -12,7 +12,7 @@ A autorização é conferida pelo RPC `safe_is_admin` e pelas regras do banco. O
 
 ## Moderação automática
 
-A função `moderate-pending` existente pode analisar textos com `MODERATION_API_KEY` configurada no servidor. O botão executa um lote manual; não configura agendamento. Ausência do provedor mantém os itens pendentes. Não coloque chave de IA no aplicativo.
+A função `moderate-pending` existente pode analisar textos com `MODERATION_API_KEY` configurada no servidor. O botão executa um lote manual. O acompanhamento opcional na web executa lotes a cada minuto enquanto Ferramentas estiver aberta; não configura cron e para ao sair dessa seção. Ausência do provedor mantém os itens pendentes. Não coloque chave de IA no aplicativo.
 
 **Novos lugares, perfis e fotos exigem aprovação humana**, tanto no veredito da função quanto no banco. A classificação de conteúdo não comprova que um comércio existe ou que seu endereço está correto. Textos elegíveis podem ser aprovados automaticamente pelas regras existentes; suspeitas ficam para revisão. Não foi ativada aprovação automática de estabelecimentos nesta rodada.
 
@@ -27,3 +27,7 @@ Depois de habilitar, saia e entre na conta e confira o atalho no perfil. Valide 
 ## Verificação
 
 `npm run test:moderation-ui` usa somente respostas interceptadas: visitante, conta sem papel, fila legível, motivo obrigatório, decisão desatualizada, IA não configurada, aprovação confirmada/recarga e largura de 320 px. Os testes unitários existentes também verificam que lugares continuam exigindo revisão humana. Esses testes não substituem a revisão real no projeto e no iPhone.
+
+## Política automática do piloto
+
+A versão `na-real-community-2026-11-09-v1` permite reprovar categorias explícitas com sinalizador coerente e score >= 0,98, com motivo, evidência e direito de revisão humana. Texto limpo elegível pode ser aprovado; dúvida continua pendente. Não há suspensão automática de contas nem aprovação automática de locais/fotos/perfis. Os detalhes de configuração, limites e teste em dois iPhones estão em [TESTE_DOIS_IPHONES.md](TESTE_DOIS_IPHONES.md). Essa lógica precisa ser publicada novamente na função, e MODERATION_API_KEY precisa ser configurada no servidor antes de operar.

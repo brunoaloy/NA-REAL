@@ -1,3 +1,4 @@
+import { MODERATION_POLICY_VERSION } from "../_shared/moderation-policy.ts";
 import { preparePhoto } from "../_shared/media.ts";
 import { clients, verified, json, preflight } from "../_shared/http.ts";
 import { moderationVerdict } from "./verdict.ts";
@@ -26,7 +27,12 @@ Deno.serve(async (req) => {
         return json({ error: "Admin required" }, 403);
     }
     const key = Deno.env.get("MODERATION_API_KEY");
-    if (!key) return json({ status: "not_configured", processed: 0 });
+    if (!key)
+      return json({
+        status: "not_configured",
+        processed: 0,
+        policy_version: MODERATION_POLICY_VERSION,
+      });
     const jobs = await c.admin
       .from("moderation_items")
       .select("id,target_type,payload")
@@ -39,7 +45,11 @@ Deno.serve(async (req) => {
       .order("created_at")
       .limit(10);
     if (jobs.error) throw jobs.error;
-    let processed = 0;
+    let processed = 0,
+      failed = 0,
+      approved = 0,
+      rejected = 0,
+      review = 0;
     for (const job of jobs.data) {
       // Send only content fields, never internal IDs, handles of reporters, tokens or private Auth data.
       const p = job.payload;
@@ -64,6 +74,7 @@ Deno.serve(async (req) => {
         try {
           bytes = await preparePhoto(c.admin, p.id);
         } catch {
+          failed++;
           continue;
         }
         let binary = "";
@@ -86,15 +97,25 @@ Deno.serve(async (req) => {
           signal: AbortSignal.timeout(20000),
         });
       } catch {
+        failed++;
         continue;
       }
-      if (!response.ok) continue;
-      const verdict = moderationVerdict(
-        await response.json(),
-        text,
-        job.target_type,
-      );
-      if (!verdict) continue;
+      if (!response.ok) {
+        failed++;
+        continue;
+      }
+      let result: unknown;
+      try {
+        result = await response.json();
+      } catch {
+        failed++;
+        continue;
+      }
+      const verdict = moderationVerdict(result, text, job.target_type);
+      if (!verdict) {
+        failed++;
+        continue;
+      }
       // Local indicators only triage risk. They never certify safety or identify a crime.
       const applied = await c.admin.rpc("safe_apply", {
         item: job.id,
@@ -103,9 +124,22 @@ Deno.serve(async (req) => {
         provider_name: "openai:omni-moderation-latest",
         result: verdict.evidence,
       });
-      if (!applied.error && applied.data) processed++;
+      if (!applied.error && applied.data === true) {
+        processed++;
+        if (verdict.decision === "approved") approved++;
+        else if (verdict.decision === "rejected") rejected++;
+        else review++;
+      } else if (applied.error) failed++;
     }
-    return json({ processed });
+    return json({
+      policy_version: MODERATION_POLICY_VERSION,
+      status: failed ? "partial" : "completed",
+      processed,
+      approved,
+      rejected,
+      review,
+      failed,
+    });
   } catch (e) {
     return json(
       {

@@ -1,3 +1,4 @@
+import { MODERATION_POLICY_VERSION } from "../_shared/moderation-policy.ts";
 /** Fail closed on incomplete provider output. Retain flags/scores, never copy source content to logs. */
 export function moderationVerdict(
   value: unknown,
@@ -48,8 +49,30 @@ export function moderationVerdict(
     )
   )
     return null;
+  const textTargets = [
+    "reviews",
+    "place_messages",
+    "place_questions",
+    "question_answers",
+    "live_reports",
+  ];
+  const rules = [
+    ["harassment/threatening", "ameaça ou intimidação"],
+    ["hate/threatening", "ameaça discriminatória"],
+    ["hate", "discriminação"],
+    ["harassment", "assédio"],
+    ["sexual/minors", "conteúdo sexual envolvendo menores"],
+    ["self-harm/instructions", "instruções de autoagressão"],
+  ] as const;
+  const violation =
+    r.flagged === true
+      ? rules.find(
+          ([key]) =>
+            r.categories[key] === true && r.category_scores[key] >= 0.98,
+        )
+      : undefined;
   const human =
-    ["places", "profiles", "photos"].includes(target) ||
+    !textTargets.includes(target) ||
     /[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}|(?:\d[\s().-]*){9,}|https?:\/\//i.test(
       text,
     );
@@ -57,17 +80,27 @@ export function moderationVerdict(
     /\b(pix|dep[oó]sito|transfer[eê]ncia|lucro garantido|pague antecipado|compre avalia[çc][õo]es|cinco estrelas em troca)\b/i.test(
       text,
     );
-  const pending = r.flagged || flags.some(Boolean) || human || financial;
+  const pending =
+    r.flagged ||
+    flags.some(Boolean) ||
+    scores.some((score) => Number(score) >= 0.5) ||
+    human ||
+    financial;
+  const decision = violation ? "rejected" : pending ? "pending" : "approved";
   return {
-    decision: pending ? "pending" : "approved",
-    reason: pending
-      ? "Análise real recebida; exige revisão humana."
-      : "Análise automática recebida sem sinalizadores; política de texto aplicada.",
+    decision,
+    reason: violation
+      ? `Reprovado automaticamente por sinal de ${violation[1]}. Você pode pedir revisão humana pelo Perfil.`
+      : pending
+        ? "Análise automática recebida; precisa de revisão humana antes de publicar."
+        : "Texto aprovado automaticamente após análise sem sinalizadores de violação.",
     evidence: {
+      policy_version: MODERATION_POLICY_VERSION,
+      matched_rule: violation?.[0] ?? null,
       flagged: r.flagged,
       categories: r.categories,
       category_scores: r.category_scores,
-      requires_human: human || financial,
+      requires_human: decision === "pending",
     },
   };
 }

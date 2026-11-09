@@ -61,18 +61,20 @@ export default function Legal() {
           <Title>Comunidade responsável</Title>
           <Copy>
             Proibidos ameaças, assédio, discriminação, fraude, exposição de
-            dados de terceiros, conteúdo sexual ilegal ou abusivo, spam e
-            manipulação de avaliações. Cadastre somente estabelecimentos
-            públicos. Não publique residências privadas, fotografias sem
-            autorização ou conteúdo que viole direitos.
+            dados de terceiros, conteúdo sexual ilegal ou abusivo, instruções de
+            autoagressão, spam e manipulação de avaliações. Cadastre somente
+            estabelecimentos públicos. Não publique residências privadas,
+            fotografias sem autorização ou conteúdo que viole direitos.
           </Copy>
           <Title>Relatos e decisões</Title>
           <Copy>
             Relatos são experiências pessoais com validade, não confirmação
             universal. Não há garantia de cobertura completa. Conteúdo pode ser
-            mantido pendente, rejeitado ou removido com registro de motivo. Use
-            denúncias e contestação de decisões; contas abusivas podem ser
-            suspensas.
+            mantido pendente, rejeitado ou removido com registro de motivo. A IA
+            pode aprovar textos sem sinalizadores e reprovar violações claras;
+            casos duvidosos e aprovação de lugares, perfis e fotos exigem
+            revisão humana. Use denúncias e contestação de decisões; contas
+            abusivas podem ser suspensas.
           </Copy>
           <Title>Direitos e emergência</Title>
           <Copy>

@@ -1,3 +1,4 @@
+import { AiModerationTools } from "../components/ai-moderation-tools";
 import { View, Pressable, Text } from "react-native";
 import { ModerationPhoto } from "../components/moderation-photo";
 import { useRef, useState } from "react";
@@ -487,50 +488,11 @@ export function ModerationPanel({ onSignOut }: { onSignOut?: () => void }) {
           {section === "tools" && (
             <>
               <Title>Ferramentas da moderação</Title>
+              <AiModerationTools
+                available={services.data?.triage === "available"}
+                onNotice={setNotice}
+              />
               <Card>
-                <Title>Ajuda da IA</Title>
-                <Copy>
-                  A análise automática ajuda a identificar conteúdos que
-                  precisam de atenção. Novos lugares continuam dependendo da sua
-                  aprovação.
-                </Copy>
-                {services.data?.triage !== "available" && (
-                  <GentleNote>
-                    A análise automática ainda não está disponível. Você pode
-                    revisar lugares manualmente na aba Cadastros.
-                  </GentleNote>
-                )}
-                <PrimaryButton
-                  title="Analisar contribuições com IA"
-                  disabled={busy || services.data?.triage !== "available"}
-                  onPress={async () => {
-                    setBusy(true);
-                    setNotice("");
-                    setError(undefined);
-                    try {
-                      const r = await db().functions.invoke(
-                        "moderate-pending",
-                        {
-                          body: {},
-                        },
-                      );
-                      if (r.error) throw r.error;
-                      if (r.data?.status === "not_configured")
-                        throw new Error(
-                          "Provedor de IA não configurado. Conteúdos permanecem pendentes.",
-                        );
-                      setNotice(
-                        `Triagem concluída: ${r.data?.processed ?? 0} itens processados. Cadastros de lugares continuam sujeitos à aprovação humana.`,
-                      );
-                      await qc.invalidateQueries();
-                    } catch (e) {
-                      setError(e);
-                    } finally {
-                      setBusy(false);
-                    }
-                  }}
-                />
-
                 <QuietButton
                   title="Conferir disponibilidade dos serviços"
                   disabled={services.isFetching}

@@ -154,12 +154,12 @@ const { readEnvironment } = require("../scripts/setup-mobile.cjs");
           .click();
         await page
           .getByRole("button", {
-            name: "Analisar contribuições com IA",
+            name: "Analisar fila com IA",
             exact: true,
           })
           .click();
         await page
-          .getByText("Provedor de IA não configurado.", { exact: false })
+          .getByText("A IA ainda não está configurada.", { exact: false })
           .waitFor();
         assert.equal(triages, 1);
         assert.equal(pending, true);
