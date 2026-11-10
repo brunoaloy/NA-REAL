@@ -1,3 +1,5 @@
+import { useSession } from "../hooks/use-session";
+import { batchPhotoUrls } from "../validation/photo-urls";
 import { useRef, useState, type ComponentRef } from "react";
 import {
   View,
@@ -26,18 +28,27 @@ type PhotoPickerProps = {
   profileId?: string;
 };
 export function PhotoPicker(props: PhotoPickerProps) {
+  const session = useSession();
   return (
     <PhotoPickerForm
-      key={JSON.stringify([props.placeId, props.reviewId, props.profileId])}
+      key={JSON.stringify([
+        session?.user.id,
+        props.placeId,
+        props.reviewId,
+        props.profileId,
+      ])}
+      owner={session?.user.id}
       {...props}
     />
   );
 }
 function PhotoPickerForm({
+  owner,
   placeId,
   reviewId,
   profileId,
 }: {
+  owner?: string;
   placeId?: string;
   reviewId?: string;
   profileId?: string;
@@ -66,7 +77,11 @@ function PhotoPickerForm({
     setError(undefined);
     setNotice("");
     try {
-      await uploadPreparedPhoto({ placeId, reviewId, profileId }, selected);
+      await uploadPreparedPhoto(
+        { placeId, reviewId, profileId },
+        selected,
+        owner,
+      );
       setSelected(null);
       setNotice("Foto enviada. Aguardando moderação; ainda não está pública.");
       await qc.invalidateQueries({ queryKey: ["photos"] });
@@ -99,7 +114,8 @@ function PhotoPickerForm({
             Confira a imagem antes de enviar. Ela ficará pendente de revisão.
           </Copy>
           <PrimaryButton
-            title="Enviar foto para revisão"
+            title={busy ? "Enviando foto…" : "Enviar foto para revisão"}
+            busy={busy}
             disabled={busy}
             onPress={() => void confirm()}
           />
@@ -163,17 +179,8 @@ export function PhotoGallery({
           : query.eq("profile_id", profileId!);
       const r = await query;
       if (r.error) throw r.error;
-      return Promise.all(
-        r.data.map(async (p) => {
-          const url = await db()
-            .storage.from("reviewed-photos")
-            .createSignedUrl(
-              p.owner_id + "/" + p.content_revision + ".jpg",
-              300,
-            );
-          if (url.error) throw url.error;
-          return { id: p.id, url: url.data.signedUrl };
-        }),
+      return batchPhotoUrls(r.data, (paths) =>
+        db().storage.from("reviewed-photos").createSignedUrls(paths, 300),
       );
     },
     staleTime: 240000,

@@ -267,10 +267,20 @@ function DetailContent({
         const fingerprint = JSON.stringify([id, text.trim(), replyTo]);
         if (draftRequest.current?.fingerprint !== fingerprint)
           draftRequest.current = { fingerprint, key: randomUUID() };
-        await sendMessage(id, text, draftRequest.current.key, replyTo);
+        await sendMessage(
+          id,
+          text,
+          draftRequest.current.key,
+          replyTo,
+          session.user.id,
+          session.access_token,
+        );
         draftRequest.current = null;
         setReplyTo(null);
-      } else setReviewId(await saveReview(id, { rating, body: text }));
+      } else
+        setReviewId(
+          await saveReview(id, { rating, body: text }, session.user.id),
+        );
       setText("");
       setNotice(
         "Contribuição recebida para análise. Só será pública após aprovação.",

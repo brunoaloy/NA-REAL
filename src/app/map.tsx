@@ -104,7 +104,7 @@ export default function MapPage() {
       configured &&
       (mapAvailable || Boolean(cityScope.city && cityScope.state)),
     initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
+    queryFn: ({ pageParam, signal }) =>
       places(
         search,
         category,
@@ -112,6 +112,7 @@ export default function MapPage() {
         cityScope.city,
         cityScope.state,
         queryBounds,
+        signal,
       ),
     getNextPageParam: (last, pages) =>
       last.length === 50 && (wholeCity || pages.length < 10)

@@ -152,7 +152,11 @@ function ProfileContent({
       textSaved = true;
       savedOwner.current = session.user.id;
       if (photo)
-        await uploadPreparedPhoto({ profileId: session.user.id }, photo);
+        await uploadPreparedPhoto(
+          { profileId: session.user.id },
+          photo,
+          session.user.id,
+        );
       setPhoto(null);
       setEditing(false);
       setNotice(

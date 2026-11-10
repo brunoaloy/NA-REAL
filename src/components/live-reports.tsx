@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useSession } from "../hooks/use-session";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { db } from "../services/supabase";
 import { userId } from "../services/catalog";
@@ -13,6 +14,8 @@ const values = [
 ] as const;
 export function LiveReports({ placeId }: { placeId: string }) {
   const qc = useQueryClient();
+  const session = useSession();
+  const sending = useRef(false);
   const [error, setError] = useState<unknown>();
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -38,6 +41,8 @@ export function LiveReports({ placeId }: { placeId: string }) {
     refetchInterval: 30000,
   });
   async function post(value: string) {
+    if (sending.current) return;
+    sending.current = true;
     setError(undefined);
     setBusy(true);
     try {
@@ -45,7 +50,7 @@ export function LiveReports({ placeId }: { placeId: string }) {
         .from("live_reports")
         .insert({
           place_id: placeId,
-          author_id: await userId(),
+          author_id: await userId(session?.user.id),
           kind: "movement",
           value,
         });
@@ -57,6 +62,7 @@ export function LiveReports({ placeId }: { placeId: string }) {
     } catch (e) {
       setError(e);
     } finally {
+      sending.current = false;
       setBusy(false);
     }
   }

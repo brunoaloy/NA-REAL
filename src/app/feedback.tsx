@@ -1,5 +1,11 @@
+import { useSession } from "../hooks/use-session";
+import {
+  localDiagnostics,
+  diagnosticReport,
+  type Diagnostic,
+} from "../validation/diagnostics";
 import { useRef, useState } from "react";
-import { Platform, Share, Text, View } from "react-native";
+import { Platform, Share, Text, View, Switch } from "react-native";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import { AppHeader } from "../components/design";
@@ -13,6 +19,10 @@ import {
 import { WarmIntro, GentleNote, m } from "../components/member-design";
 import { feedbackReport } from "../validation/feedback";
 export default function Feedback() {
+  const session = useSession();
+  return <FeedbackContent key={session?.user.id ?? "guest"} />;
+}
+function FeedbackContent() {
   const [screen, setScreen] = useState(""),
     [description, setDescription] = useState(""),
     [expected, setExpected] = useState("");
@@ -20,6 +30,8 @@ export default function Feedback() {
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false);
   const locked = useRef(false);
+  const [includeDiagnostics, setIncludeDiagnostics] = useState(false);
+  const [diagnosticPreview, setDiagnosticPreview] = useState<Diagnostic[]>([]);
   const context = {
     version: Constants.expoConfig?.version ?? "0.1.0",
     build:
@@ -39,6 +51,8 @@ export default function Feedback() {
     let message;
     try {
       message = feedbackReport({ screen, description, expected }, context);
+      if (includeDiagnostics)
+        message += "\n\n" + diagnosticReport(diagnosticPreview);
     } catch (e) {
       setError(e);
       return;
@@ -114,10 +128,34 @@ export default function Feedback() {
           editable={!busy}
         />
       </View>
+      <Card>
+        <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
+          <Text style={[m.label, { flex: 1 }]}>
+            Incluir diagnóstico técnico (opcional)
+          </Text>
+          <Switch
+            accessibilityLabel="Incluir diagnóstico técnico"
+            value={includeDiagnostics}
+            disabled={busy}
+            onValueChange={(value) => {
+              setIncludeDiagnostics(value);
+              setDiagnosticPreview(value ? localDiagnostics.snapshot() : []);
+            }}
+          />
+        </View>
+        <Text style={m.small}>
+          Somente horário, tipo de operação e categoria de falha. Sem textos
+          enviados, fotos, e-mail, localização ou tokens. Os registros ficam na
+          memória desta sessão.
+        </Text>
+        {includeDiagnostics && (
+          <Text style={m.small}>{diagnosticReport(diagnosticPreview)}</Text>
+        )}
+      </Card>
       <GentleNote>
         Você escolhe por qual aplicativo compartilhar e para quem enviar. O
-        relato contém somente os textos acima e as informações exibidas do
-        aparelho. Não inclua senhas ou dados pessoais.
+        relato contém os textos acima, o diagnóstico opcional exibido e as
+        informações do aparelho. Não inclua senhas ou dados pessoais.
       </GentleNote>
       {error != null && <ErrorState error={error} />}
       {notice !== "" && <GentleNote>{notice}</GentleNote>}

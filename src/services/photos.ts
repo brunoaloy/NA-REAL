@@ -1,3 +1,5 @@
+import { localDiagnostics } from "../validation/diagnostics";
+import { deliverPhoto } from "../validation/photo-delivery";
 import { randomUUID } from "expo-crypto";
 import * as ImagePicker from "expo-image-picker";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
@@ -53,9 +55,11 @@ export async function preparePhoto(
     throw new Error("A foto excede 5 MB após compressão.");
   return { uri: saved.uri, bytes };
 }
+const receipts = new WeakMap<PreparedPhoto, Map<string, string>>();
 export async function uploadPreparedPhoto(
   target: { placeId?: string; reviewId?: string; profileId?: string },
   prepared: PreparedPhoto,
+  expectedOwner?: string,
 ) {
   if (
     [target.placeId, target.reviewId, target.profileId].filter(Boolean)
@@ -65,27 +69,75 @@ export async function uploadPreparedPhoto(
   const bytes = prepared.bytes;
   if (!bytes.byteLength || bytes.byteLength > 5242880)
     throw new Error("A foto deve ter até 5 MB.");
-  const uid = await userId();
-  const path = uid + "/" + randomUUID() + ".jpg";
-  const row = await db()
-    .from("photos")
-    .insert({
-      owner_id: uid,
-      place_id: target.placeId,
-      review_id: target.reviewId,
-      profile_id: target.profileId,
-      object_path: path,
-      byte_size: bytes.byteLength,
-    })
-    .select("id")
-    .single();
-  if (row.error) throw row.error;
-  const uploaded = await db()
-    .storage.from("community-photos")
-    .upload(path, bytes, { contentType: "image/jpeg", upsert: false });
-  if (uploaded.error) {
-    await db().from("photos").delete().eq("id", row.data.id);
-    throw uploaded.error;
+  const uid = await userId(expectedOwner);
+  const targetKey = JSON.stringify([
+    uid,
+    target.placeId,
+    target.reviewId,
+    target.profileId,
+  ]);
+  let targets = receipts.get(prepared);
+  if (!targets) {
+    targets = new Map();
+    receipts.set(prepared, targets);
+  }
+  let path = targets.get(targetKey);
+  if (!path) {
+    path = uid + "/" + randomUUID() + ".jpg";
+    targets.set(targetKey, path);
+  }
+  const objectPath = path;
+  const findMetadata = () =>
+    db()
+      .from("photos")
+      .select("id")
+      .eq("owner_id", uid)
+      .eq("object_path", objectPath)
+      .maybeSingle();
+  try {
+    await deliverPhoto({
+      ensureMetadata: async () => {
+        const existing = await findMetadata();
+        if (existing.error) throw existing.error;
+        if (existing.data?.id) return;
+        const row = await db()
+          .from("photos")
+          .insert({
+            owner_id: uid,
+            place_id: target.placeId,
+            review_id: target.reviewId,
+            profile_id: target.profileId,
+            object_path: objectPath,
+            byte_size: bytes.byteLength,
+          })
+          .select("id")
+          .single();
+        if (row.error) {
+          const recovered = await findMetadata();
+          if (recovered.error || !recovered.data?.id) throw row.error;
+        }
+      },
+      upload: () =>
+        db().storage.from("community-photos").upload(objectPath, bytes, {
+          contentType: "image/jpeg",
+          upsert: false,
+        }),
+      exists: async () => {
+        const filename = objectPath.slice(uid.length + 1);
+        const listed = await db()
+          .storage.from("community-photos")
+          .list(uid, { search: filename, limit: 10 });
+        if (listed.error) throw listed.error;
+        return listed.data.some(
+          (file) =>
+            file.name === filename &&
+            Number(file.metadata?.size) === bytes.byteLength,
+        );
+      },
+    });
+  } catch (error) {
+    localDiagnostics.record("photo_upload", error);
+    throw error;
   }
   return true;
 }

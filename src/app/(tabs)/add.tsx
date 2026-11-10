@@ -1,3 +1,4 @@
+import { UnconfirmedPlaceDelivery } from "../../validation/delivery-error";
 import { useRef, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { Switch, Text, View, Image, Keyboard } from "react-native";
@@ -173,7 +174,7 @@ function AddContent({ session }: { session: Session | null }) {
   }
   async function sendPhoto(id: string) {
     if (!photo) return;
-    await uploadPreparedPhoto({ placeId: id }, photo);
+    await uploadPreparedPhoto({ placeId: id }, photo, session?.user.id);
     setPhoto(null);
     setPhotoSent(true);
   }
@@ -217,7 +218,7 @@ function AddContent({ session }: { session: Session | null }) {
         setDuplicates(result.data);
         return;
       }
-      const id = await addPlace(value);
+      const id = await addPlace(value, session.user.id);
       setCreated(id);
       if (photo)
         try {
@@ -593,6 +594,12 @@ function AddContent({ session }: { session: Session | null }) {
         </>
       )}
       {error != null && <ErrorState error={error} />}
+      {error instanceof UnconfirmedPlaceDelivery && (
+        <QuietButton
+          title="Conferir meus cadastros"
+          onPress={() => router.push("/(tabs)/profile")}
+        />
+      )}
       {step < 3 ? (
         <PrimaryButton
           title={step === 2 && !photo ? "Continuar sem foto" : "Continuar"}

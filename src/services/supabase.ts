@@ -27,3 +27,11 @@ export function db() {
     );
   return supabase;
 }
+/** Freeze the actor of an already-started request, without persisting a second session. */
+export function dbForAccessToken(accessToken: string) {
+  if (!configured || !url || !key || !accessToken)
+    throw new Error("Entre para contribuir.");
+  return createClient(url, key, {
+    accessToken: async () => accessToken,
+  });
+}

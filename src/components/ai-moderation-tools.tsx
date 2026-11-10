@@ -73,6 +73,7 @@ export function AiModerationTools({
       )}
       <PrimaryButton
         title={busy ? "Analisando envios…" : "Analisar fila com IA"}
+        busy={busy}
         disabled={!available || busy}
         onPress={() => void run()}
       />

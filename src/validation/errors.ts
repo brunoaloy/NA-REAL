@@ -19,6 +19,8 @@ export function errorMessage(error: unknown): string {
     return "Não foi possível acessar este serviço. Tente novamente; a revisão manual de lugares continua disponível.";
   if (item?.name === "FunctionsHttpError")
     return "O serviço não concluiu esta ação. Nenhuma confirmação foi recebida; atualize a página antes de tentar novamente.";
+  if (item?.name === "AuthSessionMissingError")
+    return "Sua sessão expirou. Entre novamente para continuar.";
   if (item?.name === "ZodError" && item.issues?.length) {
     const fields: Record<string, string> = {
       name: "nome",
@@ -37,6 +39,12 @@ export function errorMessage(error: unknown): string {
       : "Confira os campos e informe latitude e longitude juntas.";
   }
   const messages: Record<string, string> = {
+    PGRST301: "Sua sessão expirou. Entre novamente para continuar.",
+    session_not_found: "Sua sessão expirou. Entre novamente para continuar.",
+    refresh_token_not_found:
+      "Sua sessão expirou. Entre novamente para continuar.",
+    refresh_token_already_used:
+      "Sua sessão expirou. Entre novamente para continuar.",
     PGRST202:
       "O serviço ainda não está disponível. Tente novamente mais tarde.",
     PGRST205:

@@ -76,10 +76,18 @@ export default function Explore() {
   const filtered = hasFilters(filters);
   const q = useInfiniteQuery({
     queryKey: ["places", search, category, city, state, position],
-    queryFn: ({ pageParam }) =>
+    queryFn: ({ pageParam, signal }) =>
       position
-        ? nearbyPlaces(position, search, category, pageParam, city, state)
-        : places(search, category, pageParam, city, state),
+        ? nearbyPlaces(
+            position,
+            search,
+            category,
+            pageParam,
+            city,
+            state,
+            signal,
+          )
+        : places(search, category, pageParam, city, state, undefined, signal),
     initialPageParam: 0,
     getNextPageParam: (last, pages) =>
       last.length === 50 ? pages.length : undefined,

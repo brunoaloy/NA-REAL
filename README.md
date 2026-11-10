@@ -24,6 +24,8 @@ Aplicativo React Native/Expo existente, ampliado na Fase 2. Continuidade atual: 
 
 **Recomeçar o piloto com dois iPhones:** plano protegido de limpeza preservando login/moderação, configuração da IA e roteiro entre duas contas em [TESTE_DOIS_IPHONES.md](docs/TESTE_DOIS_IPHONES.md). A limpeza remota e a ativação da chave exigem as etapas desse guia; não são executadas automaticamente ao abrir o app.
 
+**Confiabilidade antes do piloto:** proteção na troca de conta, recuperação de envios inconclusivos, fotos com recibo por seleção e galeria em lote, além de diagnóstico opcional no feedback. Veja [o que foi verificado e o que falta no iPhone](docs/PRE_PILOTO_CONFIABILIDADE.md).
+
 ## Desenvolvimento
 
 Node 24 e npm 11:

@@ -1,4 +1,11 @@
-import { db } from "./supabase";
+import { confirmsPendingReview } from "../validation/review-delivery";
+import { localDiagnostics } from "../validation/diagnostics";
+import {
+  uncertainWrite,
+  UnconfirmedPlaceDelivery,
+} from "../validation/delivery-error";
+import { assertSessionOwner } from "../validation/session-lifecycle";
+import { db, dbForAccessToken } from "./supabase";
 import { placeInput, reviewInput, messageInput } from "../validation/domain";
 export type Bounds = [number, number, number, number];
 export const BRAZIL: Bounds = [-74, -34, -34, 6];
@@ -21,8 +28,9 @@ export async function places(
   city = "",
   state = "",
   bounds: Bounds = BRAZIL,
+  signal?: AbortSignal,
 ): Promise<Place[]> {
-  const { data, error } = await db().rpc("search_places", {
+  const request = db().rpc("search_places", {
     term: search.trim(),
     category_filter: category,
     city_filter: city.trim(),
@@ -33,7 +41,12 @@ export async function places(
     east: bounds[2],
     north: bounds[3],
   });
-  if (error) throw error;
+  if (signal) request.abortSignal(signal);
+  const { data, error } = await request;
+  if (error) {
+    if (!signal?.aborted) localDiagnostics.record("catalogue", error);
+    throw error;
+  }
   return data;
 }
 export async function nearbyPlaces(
@@ -43,8 +56,9 @@ export async function nearbyPlaces(
   page = 0,
   city = "",
   state = "",
+  signal?: AbortSignal,
 ): Promise<Place[]> {
-  const { data, error } = await db().rpc("search_places_near", {
+  const request = db().rpc("search_places_near", {
     origin_latitude: position.latitude,
     origin_longitude: position.longitude,
     term: search.trim(),
@@ -53,18 +67,22 @@ export async function nearbyPlaces(
     state_filter: state.trim().toUpperCase(),
     page_number: page,
   });
-  if (error) throw error;
+  if (signal) request.abortSignal(signal);
+  const { data, error } = await request;
+  if (error) {
+    if (!signal?.aborted) localDiagnostics.record("nearby", error);
+    throw error;
+  }
   return data;
 }
-export async function userId() {
+export async function userId(expected?: string) {
   const { data, error } = await db().auth.getUser();
   if (error) throw error;
-  if (!data.user) throw new Error("Entre para contribuir.");
-  return data.user.id;
+  return assertSessionOwner(data.user?.id, expected);
 }
-export async function addPlace(input: unknown) {
+export async function addPlace(input: unknown, expectedOwner?: string) {
   const value = placeInput.parse(input);
-  const uid = await userId();
+  const uid = await userId(expectedOwner);
   const { latitude, longitude, ...fields } = value;
   const geom =
     latitude != null && longitude != null
@@ -75,12 +93,20 @@ export async function addPlace(input: unknown) {
     .insert({ ...fields, geom, created_by: uid })
     .select("id")
     .single();
-  if (r.error) throw r.error;
+  if (r.error) {
+    if (uncertainWrite({ message: r.error.message, status: r.status }))
+      throw new UnconfirmedPlaceDelivery();
+    throw r.error;
+  }
   return r.data.id as string;
 }
-export async function saveReview(place_id: string, input: unknown) {
+export async function saveReview(
+  place_id: string,
+  input: unknown,
+  expectedOwner?: string,
+) {
   const value = reviewInput.parse(input);
-  const author_id = await userId();
+  const author_id = await userId(expectedOwner);
   const existing = await db()
     .from("reviews")
     .select("id")
@@ -100,7 +126,22 @@ export async function saveReview(place_id: string, input: unknown) {
         .insert({ ...value, place_id, author_id })
         .select("id")
         .single();
-  if (result.error) throw result.error;
+  if (result.error) {
+    if (
+      result.error.code === "23505" ||
+      uncertainWrite({ message: result.error.message, status: result.status })
+    ) {
+      const recovered = await db()
+        .from("reviews")
+        .select("id,rating,body,moderation_state")
+        .eq("place_id", place_id)
+        .eq("author_id", author_id)
+        .maybeSingle();
+      if (!recovered.error && confirmsPendingReview(recovered.data, value))
+        return recovered.data!.id as string;
+    }
+    throw result.error;
+  }
   return result.data.id as string;
 }
 export async function sendMessage(
@@ -108,9 +149,16 @@ export async function sendMessage(
   body: string,
   request: string,
   reply: string | null = null,
+  expectedOwner?: string,
+  snapshotToken?: string,
 ) {
-  await userId();
-  const r = await db().rpc("submit_message", {
+  const token =
+    snapshotToken ?? (await db().auth.getSession()).data.session?.access_token;
+  if (!token) throw new Error("Entre para contribuir.");
+  const verified = await db().auth.getUser(token);
+  if (verified.error) throw verified.error;
+  assertSessionOwner(verified.data.user?.id, expectedOwner);
+  const r = await dbForAccessToken(token).rpc("submit_message", {
     place: place_id,
     body: messageInput.parse(body),
     request,

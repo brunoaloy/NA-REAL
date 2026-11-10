@@ -94,18 +94,20 @@ export function PrimaryButton({
   title,
   onPress,
   disabled = false,
+  busy = false,
 }: {
   title: string;
   onPress: () => void;
   disabled?: boolean;
+  busy?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      disabled={disabled}
+      accessibilityState={{ disabled: disabled || busy, busy }}
+      disabled={disabled || busy}
       onPress={onPress}
-      style={[s.button, disabled && { opacity: 0.5 }]}
+      style={[s.button, (disabled || busy) && { opacity: 0.5 }]}
     >
       <LinearGradient
         colors={["#0F766E", "#008677"]}

@@ -95,7 +95,8 @@
     "moderation:web": "node scripts/moderation-web.cjs",
     "moderation:build": "node scripts/moderation-web.cjs --build",
     "moderation:deploy-services": "node scripts/deploy-moderation-services.cjs",
-    "moderation:services-check": "node --use-env-proxy scripts/check-moderation-services.cjs"
+    "moderation:services-check": "node --use-env-proxy scripts/check-moderation-services.cjs",
+    "performance:check": "node --use-env-proxy scripts/check-public-performance.cjs"
   },
   "private": true
 }
